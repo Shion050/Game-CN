@@ -1,0 +1,16 @@
+{
+  "name": "hsk-chinese-game",
+  "version": "1.0.0",
+  "description": "เกมเรียนภาษาจีน HSK 1-5 ธีมกระดาษจีน/ตราประทับ",
+  "private": true,
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server --port=5500 --no-browser",
+    "dev": "live-server --port=5500"
+  },
+  "keywords": ["hsk", "chinese", "vocabulary", "game"],
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

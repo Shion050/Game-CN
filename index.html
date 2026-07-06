@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HSK 1-5 · เกมเรียนภาษาจีนรูปแบบใหม่</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Kanit:wght@400;600;800&family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="corner-fret" viewBox="0 0 60 60">
+        <path
+          d="M2 58 L2 30 Q2 2 30 2 L58 2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+        />
+        <path
+          d="M12 58 L12 34 Q12 12 34 12 L58 12"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          opacity="0.6"
+        />
+        <circle cx="10" cy="50" r="3" fill="currentColor" />
+      </symbol>
+    </svg>
+    <div class="frame-corner corner-tl" aria-hidden="true">
+      <svg viewBox="0 0 60 60"><use href="#corner-fret" /></svg>
+    </div>
+    <div class="frame-corner corner-tr" aria-hidden="true">
+      <svg viewBox="0 0 60 60"><use href="#corner-fret" /></svg>
+    </div>
+    <div class="frame-corner corner-bl" aria-hidden="true">
+      <svg viewBox="0 0 60 60"><use href="#corner-fret" /></svg>
+    </div>
+    <div class="frame-corner corner-br" aria-hidden="true">
+      <svg viewBox="0 0 60 60"><use href="#corner-fret" /></svg>
+    </div>
+    <div class="app" id="app">
+
+      <section class="screen active" id="screen-hsk" aria-label="เลือกระดับ HSK">
+        <header class="brand">
+          <div class="lantern lantern-left" aria-hidden="true">
+            <span class="cap"></span><span class="string"></span
+            ><span class="lantern-body"></span><span class="tassel"></span>
+          </div>
+          <div class="lantern lantern-right" aria-hidden="true">
+            <span class="cap"></span><span class="string"></span
+            ><span class="lantern-body"></span><span class="tassel"></span>
+          </div>
+          <div class="watermark hanzi" aria-hidden="true">汉</div>
+          <p class="eyebrow">汉语 · CHINESE LEVEL UP</p>
+          <h1>เลือกระดับ <span class="accent">HSK</span></h1>
+          <svg class="brush" viewBox="0 0 140 18" aria-hidden="true">
+            <path d="M5 9 C 30 2, 60 16, 70 9 S 110 2, 135 9" />
+          </svg>
+          <p class="subtitle">เลือกเลเวลคำศัพท์ระบบพู่กันจีนเพื่อเริ่มต้นความสนุก</p>
+        </header>
+
+        <main class="card-grid" id="hsk-grid">
+          <button class="level-card" type="button" data-hsk="hsk1">
+            <span class="seal-stamp hanzi">一</span>
+            <span class="info"><span class="title">HSK 1</span><span class="desc">คำศัพท์พื้นฐาน 150 คำแรก</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-hsk="hsk2">
+            <span class="seal-stamp hanzi">二</span>
+            <span class="info"><span class="title">HSK 2</span><span class="desc">ประโยคโครงสร้างชีวิตประจำวัน</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-hsk="hsk3">
+            <span class="seal-stamp hanzi">三</span>
+            <span class="info"><span class="title">HSK 3</span><span class="desc">เนื้อหาระดับกลางและบทสนทนาต่อเนื่อง</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-hsk="hsk4">
+            <span class="seal-stamp hanzi">四</span>
+            <span class="info"><span class="title">HSK 4</span><span class="desc">ไวยากรณ์เชิงวิเคราะห์และคำเฉพาะทาง</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-hsk="hsk5">
+            <span class="seal-stamp hanzi">五</span>
+            <span class="info"><span class="title">HSK 5</span><span class="desc">คำศัพท์ขั้นสูงสำหรับใช้อ่านบทความ</span></span>
+            <span class="arrow">▶</span>
+          </button>
+        </main>
+      </section>
+
+      <section class="screen" id="screen-mode" aria-label="เลือกโหมดเกม">
+        <nav class="back-row">
+          <button class="back-btn" type="button" data-back="screen-hsk">← </button>
+          <h2>เลือกโหมดผู้เล่น</h2>
+        </nav>
+        <p class="subtitle" id="mode-context">ต้องการตะลุยคนเดียวหรือแข่งขันแบบจับกลุ่ม</p>
+        <main class="card-grid" id="mode-grid">
+          <button class="level-card" type="button" data-mode="solo">
+            <span class="seal-stamp">👤</span>
+            <span class="info"><span class="title">Solo Mode</span><span class="desc">ฝึกฝนทบทวนเก็บคะแนนคนเดียวเงียบๆ</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-mode="group">
+            <span class="seal-stamp">👥</span>
+            <span class="info"><span class="title">Group Random Team</span><span class="desc">ปาร์ตี้เกมสุ่มจับทีมแข่งกันตอบ</span></span>
+            <span class="arrow">▶</span>
+          </button>
+        </main>
+      </section>
+
+      <section class="screen" id="screen-group-setup" aria-label="ตั้งค่ากลุ่มผู้เล่น">
+        <nav class="back-row">
+          <button class="back-btn" type="button" data-back="screen-mode">←</button>
+          <h2>ตั้งชื่อและจัดทีมผู้เล่น</h2>
+        </nav>
+        <form class="setup-card" id="group-setup-form">
+          <div class="form-group">
+            <label for="player-count">จำนวนผู้เข้าร่วมทั้งหมด</label>
+            <div class="input-row">
+              <input type="number" id="player-count" class="number-input" min="2" max="20" value="4" />
+              <button type="button" class="btn btn-ghost" id="apply-player-count">อัปเดตช่องชื่อ</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>รายชื่อสมาชิก</label>
+            <div class="player-list" id="player-name-list"></div>
+            <button type="button" class="btn btn-ghost btn-add" id="add-player-btn">+ เพิ่มแถวรายชื่อ</button>
+          </div>
+          <div class="form-group">
+            <label for="team-count">จัดสรรออกเป็น</label>
+            <select id="team-count" class="select-input">
+              <option value="2">2 ทีม</option>
+              <option value="3">3 ทีม</option>
+              <option value="4">4 ทีม</option>
+            </select>
+          </div>
+          <p class="form-note" id="group-setup-error" role="alert"></p>
+          <button type="submit" class="btn btn-primary btn-block" id="randomize-btn"> สุ่มจับสลากแบ่งทีม</button>
+        </form>
+      </section>
+
+      <section class="screen" id="screen-team-result" aria-label="ผลการสุ่มทีม">
+        <nav class="back-row">
+          <button class="back-btn" type="button" data-back="screen-group-setup">← แก้ไขชื่อ</button>
+          <h2>ผลการสุ่มจับคู่ทีม</h2>
+        </nav>
+        <p class="subtitle">ระบบคัดเลือกทีมสมดุลเรียบร้อยแล้ว ตรวจสอบรายชื่อด้านล่าง</p>
+        <main class="team-grid" id="team-result-grid"></main>
+        <button type="button" class="btn btn-primary btn-block" id="confirm-teams-btn">ดำเนินการเลือกเกมย่อย ▶</button>
+      </section>
+
+      <section class="screen" id="screen-subgame" aria-label="เลือกเกมย่อย">
+        <nav class="back-row">
+          <button class="back-btn" type="button" id="subgame-back-btn" data-back="screen-mode">← </button>
+          <h2 id="subgame-heading">เลือกเกมย่อย</h2>
+        </nav>
+        <p class="subtitle" id="subgame-context">ระดับ: -</p>
+        <div class="extra-menu special-menu">
+          <button type="button" class="btn" onclick="openVocabulary()"> เปิดคลังคำศัพท์</button>
+          <button type="button" class="btn" onclick="openListenGame()"> ฝึกการฟังและออกเสียง</button>
+        </div>
+        <main class="card-grid" id="subgame-grid"></main>
+      </section>
+
+      <section class="screen" id="screen-vocabulary" aria-label="คลังคำศัพท์">
+        <h2 style="color:var(--gold); text-align:center; margin-top:20px;">คลังคำศัพท์รวม</h2>
+        <div id="vocabulary-list" style="margin-top:20px;"></div>
+        <button type="button" class="back-btn" data-back="screen-subgame" style="display:block; margin:30px auto;">◀ </button>
+      </section>
+
+      <section class="screen" id="screen-listen" aria-label="ฟังแล้วพูดตาม">
+        <h2 style="color:var(--gold); text-align:center; margin-top:20px;">🎧 ฝึกทักษะการฟังสำเนียงจีน</h2>
+        <main class="question-card" style="text-align :center; max-width:500px; margin: 30px auto;">
+          <div id="listen-word" class="hanzi" style="font-size:72px; margin:40px 0; color:var(--seal);">-</div>
+          <button type="button" class="btn btn-primary" onclick="playAudio()">🔊 กดฟังเสียงพ่นคำศัพท์</button>
+          <button type="button" class="btn btn-ghost" onclick="nextListen()" style="margin-top:15px;">ถัดไป ▶</button>
+        </main>
+        <button type="button" class="back-btn" data-back="screen-subgame" style="display:block; margin:20px auto;">◀ </button>
+      </section>
+
+      <section class="screen" id="screen-game" aria-label="เล่นเกม">
+        <nav class="back-row">
+          <button class="back-btn" type="button" data-back="screen-subgame">← </button>
+        </nav>
+        <header class="hud">
+          <div class="hud-left">
+            <p class="progress-text" id="progress-text">ข้อที่ 1 / 10</p>
+            <p class="game-name" id="game-name-badge">-</p>
+          </div>
+          <div class="team-score-row" id="team-score-row"></div>
+        </header>
+        <main class="question-card">
+          <p class="turn-indicator" id="turn-indicator"></p>
+          <h2 id="question-text">คำถามจะปรากฏขึ้นที่นี่</h2>
+          <div class="options" id="options-container"></div>
+          <button type="button" class="btn btn-primary btn-block next-btn" id="next-btn">ยืนยันข้อต่อไป</button>
+        </main>
+      </section>
+
+      <section class="screen" id="screen-leaderboard" aria-label="กระดานคะแนน">
+        <header class="brand">
+          <p class="eyebrow">排行榜 · RANKING</p>
+          <h1>ทำเนียบคะแนนรวม</h1>
+          <svg class="brush" viewBox="0 0 140 18" aria-hidden="true"><path d="M5 9 C 30 2, 60 16, 70 9 S 110 2, 135 9" /></svg>
+        </header>
+        <main class="leaderboard"><ol id="leaderboard-list"></ol></main>
+        <button type="button" class="btn btn-primary btn-block" id="leaderboard-next-btn">ดูหน้าสรุปผลลัพธ์ ▶</button>
+      </section>
+
+      <section class="screen" id="screen-result" aria-label="ผลสรุปเกม">
+        <main class="result-card">
+          <div class="fireworks" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span
+            ></span><span></span>
+          </div>
+          <div class="seal-big hanzi" id="result-seal" aria-hidden="true">胜</div>
+          <h2 id="result-title">สรุปผลการประลองเสร็จสิ้น</h2>
+          <p class="winner-label">ผู้ทำคะแนนได้สูงสุด</p>
+          <p class="winner-name" id="result-winner">-</p>
+          <div class="score-big" id="result-score">0</div>
+          <p class="score-sub">คะแนนสูงสุดในรอบนี้</p>
+          <div class="result-stats" id="result-stats"></div>
+          <button type="button" class="btn btn-primary btn-block" id="play-again-btn">กลับไปหน้าแรก</button>
+        </main>
+      </section>
+
+    </div>
+   <script src="vocabulary.js"></script>
+   <script src="script.js"></script>
+  </body>
+</html>

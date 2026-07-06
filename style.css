@@ -1,0 +1,1329 @@
+/* ============================================================
+   HSK 1-3 · เกมเรียนภาษาจีน
+   สไตล์: กระดาษจีน (ink / paper / seal stamp)
+   ฟอนต์: Noto Serif SC (ตัวจีน), Kanit (หัวข้อ), Sarabun (เนื้อหา)
+============================================================ */
+
+:root {
+  /* ---------- ชุดสี ---------- */
+  --ink: #1e1b1a;
+  --ink-soft: #2a2522;
+  --paper: #f7efe0;
+  --paper-soft: #fffbf2;
+  --seal: #c1382d;
+  --gold: #d9a857;
+  --jade: #5e8c7a;
+  --text-on-ink: #f7efe0;
+  --text-dim: #b8a89a;
+  --text-on-paper: #2c2521;
+  --text-muted: #8a7c70;
+
+  /* ---------- ระยะห่าง / รูปทรง ---------- */
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+
+  /* ---------- พื้นผิวกระดาษเนื้อหยาบ (rice-paper grain) ---------- */
+  --grain: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'160'%20height%3D'160'%3E%3Cfilter%20id%3D'n'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'0.85'%20numOctaves%3D'2'%20stitchTiles%3D'stitch'%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D'100%25'%20height%3D'100%25'%20filter%3D'url(%23n)'%2F%3E%3C%2Fsvg%3E");
+}
+
+/* ---------- รีเซ็ตพื้นฐาน ---------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: "Sarabun", sans-serif;
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'140'%20height%3D'140'%3E%3Cg%20fill%3D'none'%20stroke%3D'%23d9a857'%20stroke-width%3D'1.4'%20opacity%3D'0.5'%3E%3Cpath%20d%3D'M10%2030%20Q20%2018%2032%2026%20Q40%2016%2052%2026%20Q58%2018%2068%2028'%2F%3E%3Cpath%20d%3D'M80%2090%20Q90%2078%20102%2086%20Q110%2076%20122%2086%20Q128%2078%20138%2088'%2F%3E%3Ccircle%20cx%3D'20'%20cy%3D'100'%20r%3D'2'%2F%3E%3Ccircle%20cx%3D'115'%20cy%3D'20'%20r%3D'2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"),
+    radial-gradient(circle at 50% -10%, #322b27 0%, var(--ink) 55%);
+  background-size:
+    140px 140px,
+    auto;
+  background-attachment: fixed;
+  color: var(--text-on-ink);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.hanzi {
+  font-family: "Noto Serif SC", serif;
+}
+
+/* พื้นผิวเนื้อกระดาษหยาบแบบจีนโบราณ ทาบทับบนพื้นผิวกระดาษทุกจุด */
+.level-card,
+.question-card,
+.setup-card,
+.result-card,
+.team-card,
+.vocab-card,
+.leaderboard li {
+  position: relative;
+  isolation: isolate;
+}
+.level-card::after,
+.question-card::after,
+.setup-card::after,
+.result-card::after,
+.team-card::after,
+.vocab-card::after,
+.leaderboard li::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--grain);
+  background-size: 160px 160px;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ============================================================
+   #app : คอนเทนเนอร์หลักของ SPA (จำกัดความกว้างสำหรับ responsive)
+============================================================ */
+.app {
+  width: 100%;
+  max-width: 720px;
+}
+
+/* ---------- ระบบสลับหน้าจอ (Screen / SPA) ---------- */
+.screen {
+  display: none;
+}
+.screen.active {
+  display: block;
+  animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ============================================================
+   ส่วนหัว / Brand (ใช้ในหน้าแรกและหน้า Leaderboard)
+============================================================ */
+.brand {
+  text-align: center;
+  margin-bottom: 26px;
+  position: relative;
+}
+
+.brand .eyebrow {
+  font-family: "Kanit", sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  font-size: 12px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.brand h1 {
+  font-family: "Kanit", sans-serif;
+  font-weight: 800;
+  font-size: clamp(28px, 8vw, 44px);
+  line-height: 1.2;
+  margin-top: 6px;
+}
+
+.brand h1 .accent {
+  color: var(--seal);
+}
+
+.subtitle {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.7;
+  text-align: center;
+  margin: 14px 0 26px;
+}
+
+/* ลายน้ำตัวอักษรจีนด้านหลังหัวข้อ */
+.watermark {
+  position: absolute;
+  top: -36px;
+  right: -10px;
+  font-size: 100px;
+  color: rgba(193, 56, 45, 0.1);
+  font-weight: 900;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* เส้นพู่กันคั่น */
+.brush {
+  display: block;
+  width: 140px;
+  height: 18px;
+  margin: 14px auto 0;
+}
+.brush path {
+  stroke: var(--seal);
+  stroke-width: 4;
+  fill: none;
+  stroke-linecap: round;
+}
+
+/* ============================================================
+   ปุ่มย้อนกลับ (ใช้ในทุกหน้ายกเว้นหน้าแรก)
+============================================================ */
+.back-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.back-btn {
+  background: var(--ink-soft);
+  color: var(--text-on-ink);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.back-row h2 {
+  font-family: "Kanit", sans-serif;
+  font-weight: 800;
+  font-size: 34px;
+  color: #fff;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================
+   SECTION 1 & 2 & 5 : การ์ดเลือกตัวเลือก (HSK / Mode / Subgame)
+============================================================ */
+.card-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.level-card {
+  position: relative;
+  background: var(--paper);
+  color: var(--text-on-paper);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  font-family: "Sarabun", sans-serif;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.level-card:hover,
+.level-card:focus-visible {
+  transform: translateY(-3px) rotate(-0.3deg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  outline: none;
+}
+
+/* ตราประทับสีแดงด้านซ้ายของการ์ด (แบบตราประทับหยกโบราณ 2 ชั้น) */
+.seal-stamp {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  background: radial-gradient(circle at 32% 28%, #d1483c, var(--seal) 70%);
+  border: 3px double rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--paper);
+  font-size: 26px;
+  font-weight: 700;
+  transform: rotate(-6deg);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.14);
+  position: relative;
+  z-index: 1;
+}
+/* เงาหมึกซึมรอบตราประทับ ให้ความรู้สึกปั๊มตราลงบนกระดาษจริง */
+.seal-stamp::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    rgba(193, 56, 45, 0.35),
+    transparent 72%
+  );
+  filter: blur(3px);
+  z-index: -1;
+}
+
+.level-card .info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.level-card .title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #231f1c;
+}
+
+.level-card .desc {
+  font-size: 15px;
+  font-weight: 600;
+  color: #5f5349;
+}
+.level-card .arrow {
+  margin-left: auto;
+  color: var(--seal);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   SECTION 3 : Group Setup (ฟอร์มกรอกข้อมูลผู้เล่น)
+============================================================ */
+.setup-card {
+  background: var(--paper);
+  color: var(--text-on-paper);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.form-group > label {
+  font-family: "Kanit", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.number-input,
+.select-input,
+.text-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: var(--paper-soft);
+  color: var(--text-on-paper);
+  font-family: "Sarabun", sans-serif;
+  font-size: 14px;
+}
+.number-input {
+  max-width: 110px;
+}
+.text-input::placeholder {
+  color: #b0a498;
+}
+
+/* รายการช่องกรอกชื่อผู้เล่น */
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.player-list-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.player-list-item .text-input {
+  flex: 1;
+}
+.remove-player-btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: rgba(193, 56, 45, 0.12);
+  color: var(--seal);
+  font-size: 16px;
+  cursor: pointer;
+}
+.remove-player-btn:hover {
+  background: rgba(193, 56, 45, 0.2);
+}
+
+.form-note {
+  font-size: 13px;
+  color: var(--seal);
+  min-height: 18px;
+}
+
+/* ============================================================
+   ปุ่มทั่วไป (ใช้ซ้ำได้ทุกหน้า)
+============================================================ */
+.btn {
+  font-family: "Kanit", sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 13px 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn-block {
+  width: 100%;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #d1483c, var(--seal) 60%, #9c2c22);
+  color: #fff;
+  border: 1px solid rgba(217, 168, 87, 0.55);
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+/* ประกายทองพาดผ่านปุ่มเมื่อ hover คล้ายแสงสะท้อนแผ่นทองคำเปลว */
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+.btn-primary:hover::after {
+  left: 130%;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-on-paper);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+.btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.btn-add {
+  align-self: flex-start;
+}
+
+/* ============================================================
+   SECTION 4 : ผลการสุ่มทีม
+============================================================ */
+.team-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+@media (min-width: 520px) {
+  .team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.team-card {
+  background: var(--paper);
+  color: var(--text-on-paper);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.team-card::before {
+  content: "队";
+  font-family: "Noto Serif SC", serif;
+  font-weight: 900;
+  position: absolute;
+  top: -22px;
+  right: -6px;
+  font-size: 80px;
+  color: rgba(193, 56, 45, 0.06);
+}
+.team-card h3 {
+  font-family: "Kanit", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.team-card .team-color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.team-card ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.team-card li {
+  font-size: 13.5px;
+  background: var(--paper-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  position: relative;
+}
+
+/* ============================================================
+   ปุ่ม คลังคำศัพท์ + ฟังแล้วพูดตาม (หน้าหลัก)
+============================================================ */
+.extra-menu {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  justify-content: center;
+}
+
+.extra-menu .btn {
+  background: rgba(255, 251, 242, 0.6);
+  border: 2px solid var(--gold);
+  color: #b28336;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.extra-menu .btn:hover {
+  background: var(--gold);
+  color: var(--paper);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(217, 168, 87, 0.3);
+}
+
+.extra-menu .btn:active {
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   SECTION 6 : หน้าเล่นเกม (HUD + การ์ดคำถาม)
+============================================================ */
+.hud {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.hud-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.progress-text {
+  font-family: "Kanit", sans-serif;
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+.game-name {
+  font-family: "Kanit", sans-serif;
+  font-size: 13px;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* แถบคะแนนทีม */
+.team-score-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.team-score-badge {
+  font-family: "Kanit", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--ink-soft);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.team-score-badge.active {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.team-score-badge .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* การ์ดคำถาม */
+.question-card {
+  background: var(--paper);
+  color: var(--text-on-paper);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.question-card::before {
+  content: "问";
+  font-family: "Noto Serif SC", serif;
+  font-weight: 900;
+  position: absolute;
+  top: -30px;
+  right: -10px;
+  font-size: 120px;
+  color: rgba(193, 56, 45, 0.06);
+}
+
+.turn-indicator {
+  font-family: "Kanit", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--seal);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.question-card h2 {
+  font-family: "Kanit", sans-serif;
+  font-weight: 600;
+  font-size: clamp(17px, 4.5vw, 23px);
+  line-height: 1.6;
+  position: relative;
+}
+.question-card h2 .cn {
+  font-family: "Noto Serif SC", serif;
+  font-weight: 700;
+}
+
+/* ตัวเลือกคำตอบ */
+.options {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  position: relative;
+}
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: var(--paper-soft);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: var(--text-on-paper);
+  font-family: "Sarabun", sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+  width: 100%;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.option .cn {
+  font-family: "Noto Serif SC", serif;
+}
+.option:hover:not(:disabled) {
+  background: #fff;
+  border-color: var(--gold);
+}
+.option:focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 2px;
+}
+
+.option .opt-letter {
+  font-family: "Kanit", sans-serif;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.option.selected {
+  background: #fff;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(197, 160, 71, 0.25);
+}
+.option.selected .opt-letter {
+  background: var(--gold);
+  color: #fff;
+}
+.option.correct {
+  background: rgba(94, 140, 122, 0.16);
+  border-color: var(--jade);
+}
+.option.correct .opt-letter {
+  background: var(--jade);
+  color: #fff;
+}
+.option.wrong {
+  background: rgba(193, 56, 45, 0.12);
+  border-color: var(--seal);
+}
+.option.wrong .opt-letter {
+  background: var(--seal);
+  color: #fff;
+}
+.option:disabled {
+  cursor: default;
+}
+
+/* ปุ่มข้อต่อไป */
+.next-btn {
+  margin-top: 22px;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    filter 0.15s ease;
+}
+.next-btn.visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* ============================================================
+   SECTION 7 : Leaderboard
+============================================================ */
+.leaderboard {
+  margin-bottom: 22px;
+}
+.leaderboard ol {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.leaderboard li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--paper);
+  color: var(--text-on-paper);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-size: 14px;
+}
+.leaderboard li.first {
+  border: 2px solid var(--gold);
+  background: linear-gradient(135deg, var(--paper) 60%, #fff3da);
+}
+.leaderboard .rank-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.leaderboard .rank {
+  font-family: "Kanit", sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--seal);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+/* เหรียญรางวัลทอง-เงิน-ทองแดง สำหรับ 3 อันดับแรก */
+.leaderboard li.rank-1 .rank {
+  background: linear-gradient(135deg, #f8de9a, #d9a857 65%, #b3822f);
+  color: #543a0d;
+  box-shadow:
+    0 2px 6px rgba(217, 168, 87, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+.leaderboard li.rank-2 .rank {
+  background: linear-gradient(135deg, #f1f1f1, #c3c3c3 65%, #949494);
+  color: #3a3a3a;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+.leaderboard li.rank-3 .rank {
+  background: linear-gradient(135deg, #e7ad7c, #b9743f 65%, #8a5228);
+  color: #3a2210;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+.leaderboard .team-name {
+  font-family: "Kanit", sans-serif;
+  font-weight: 600;
+}
+.leaderboard .team-score {
+  font-family: "Kanit", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* ============================================================
+   SECTION 8 : Result Page
+============================================================ */
+.result-card {
+  background: var(--paper);
+  color: var(--text-on-paper);
+  border-radius: var(--radius-lg);
+  padding: 36px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.result-card .seal-big {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto;
+  background: var(--seal);
+  color: var(--paper);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 700;
+  transform: rotate(-6deg);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+.result-card h2 {
+  font-family: "Kanit", sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  margin-top: 14px;
+}
+.winner-label {
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 20px;
+}
+.winner-name {
+  font-family: "Kanit", sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--seal);
+  margin-top: 4px;
+}
+.score-big {
+  font-family: "Kanit", sans-serif;
+  font-weight: 800;
+  font-size: 50px;
+  margin: 14px 0 2px;
+}
+.score-sub {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.result-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 22px;
+  text-align: left;
+}
+.result-stat-row {
+  display: flex;
+  justify-content: space-between;
+  background: var(--paper-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.result-stat-row .num {
+  font-family: "Kanit", sans-serif;
+  font-weight: 700;
+}
+
+#play-again-btn {
+  margin-top: 24px;
+}
+
+/* ============================================================
+   🎨 ตกแต่งพื้นที่แสดงรายการคลังคำศัพท์ (Vocabulary Grid)
+============================================================ */
+#vocabulary-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  padding: 24px 4px;
+}
+
+.vocab-card {
+  background: var(--paper-soft);
+  border: 1px solid rgba(217, 168, 87, 0.25);
+  border-left: 5px solid var(--seal);
+  border-radius: var(--radius-md);
+  padding: 22px 20px;
+  box-shadow: 0 4px 16px rgba(44, 37, 33, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.vocab-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--gold);
+  box-shadow: 0 10px 24px rgba(193, 56, 45, 0.08);
+}
+
+.vocab-card h3 {
+  font-family: "Noto Serif SC", serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+.vocab-card .vocab-py {
+  font-family: "Sarabun", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #b28336;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+}
+
+.vocab-card .vocab-th {
+  font-family: "Sarabun", sans-serif;
+  font-size: 15.5px;
+  color: var(--text-on-paper);
+  background: rgba(217, 168, 87, 0.07);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  align-self: flex-start;
+  font-weight: 500;
+}
+
+.no-data {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text-muted);
+  font-size: 16px;
+  grid-column: 1 / -1;
+}
+
+/* 🏯 ส่วนหัวหน้าจอคลังคำศัพท์ */
+#screen-vocabulary {
+  padding: 24px 16px;
+}
+#screen-vocabulary h2 {
+  font-family: "Kanit", sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-on-ink);
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+}
+#screen-vocabulary p {
+  font-family: "Sarabun", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 24px;
+  opacity: 0.95;
+}
+
+/* 🧧 ปุ่มย้อนกลับหน้าคลังคำศัพท์ */
+#screen-vocabulary .back-btn {
+  display: block;
+  width: fit-content;
+  margin: 24px auto 10px auto;
+  padding: 12px 32px;
+  font-family: "Kanit", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-on-ink);
+  background: linear-gradient(135deg, var(--ink-soft) 0%, #151312 100%);
+  border: 1px solid rgba(217, 168, 87, 0.4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-in-out;
+}
+#screen-vocabulary .back-btn:hover {
+  background: var(--seal);
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(193, 56, 45, 0.3);
+}
+#screen-vocabulary .back-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================================
+   Responsive: ปรับสำหรับหน้าจอเล็ก (Mobile Viewポート)
+============================================================ */
+@media (max-width: 420px) {
+  .team-score-row {
+    justify-content: flex-start;
+  }
+  .result-stat-row {
+    font-size: 13px;
+  }
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .number-input {
+    max-width: 100%;
+  }
+
+  #subgame-context {
+    font-family: "Kanit", sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 22px;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
+  }
+  #subgame-context .highlight-hsk {
+    color: #ffd700;
+    font-weight: 900;
+  }
+
+  /* ปุ่มเมนูพิเศษบนมือถือ */
+  .extra-menu {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-direction: column; /* ปรับให้เรียงลงมาแนวตั้งในมือถือขนาดเล็กมาก */
+  }
+  .extra-menu .btn {
+    background: #221f1c;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    padding: 14px 26px;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    animation: pulseBtn 2s infinite;
+  }
+  .extra-menu .btn:hover {
+    background: #2f2a25;
+    color: #ffd369;
+    transform: translateY(-4px);
+  }
+  .extra-menu .btn:first-child::before {
+    content: "📚 ";
+  }
+  .extra-menu .btn:last-child::before {
+    content: "🎧 ";
+  }
+}
+
+/* ---------- Keyframes Animation ---------- */
+@keyframes pulseBtn {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 168, 87, 0);
+  }
+  50% {
+    box-shadow: 0 0 25px 0 rgba(217, 168, 87, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 168, 87, 0);
+  }
+}
+
+/* ============================================================
+   🖼️ กรอบมุมลายก้านขด (回纹 fret corners) ยึดติดกับขอบจอทั้ง 4 มุม
+============================================================ */
+.frame-corner {
+  position: fixed;
+  width: 46px;
+  height: 46px;
+  color: var(--gold);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 0 5px rgba(217, 168, 87, 0.3));
+}
+.frame-corner svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.corner-tl {
+  top: 14px;
+  left: 14px;
+}
+.corner-tr {
+  top: 14px;
+  right: 14px;
+  transform: scaleX(-1);
+}
+.corner-bl {
+  bottom: 14px;
+  left: 14px;
+  transform: scaleY(-1);
+}
+.corner-br {
+  bottom: 14px;
+  right: 14px;
+  transform: scale(-1, -1);
+}
+@media (max-width: 640px) {
+  .frame-corner {
+    width: 28px;
+    height: 28px;
+  }
+  .corner-tl,
+  .corner-tr {
+    top: 8px;
+  }
+  .corner-bl,
+  .corner-br {
+    bottom: 8px;
+  }
+  .corner-tl,
+  .corner-bl {
+    left: 8px;
+  }
+  .corner-tr,
+  .corner-br {
+    right: 8px;
+  }
+}
+
+/* ============================================================
+   🏮 โคมไฟแดงแขวนสองข้างของหัวข้อหลัก (หน้าเลือก HSK)
+============================================================ */
+.lantern {
+  position: absolute;
+  top: -18px;
+  width: 34px;
+  z-index: 2;
+  animation: lanternSway 3.6s ease-in-out infinite;
+  transform-origin: top center;
+}
+.lantern-left {
+  left: 4%;
+}
+.lantern-right {
+  right: 4%;
+  animation-delay: 0.6s;
+}
+.lantern .string {
+  display: block;
+  width: 1px;
+  height: 12px;
+  background: rgba(217, 168, 87, 0.6);
+  margin: 0 auto;
+}
+.lantern .lantern-body {
+  display: block;
+  width: 34px;
+  height: 40px;
+  margin: 0 auto;
+  border-radius: 16px;
+  background: radial-gradient(circle at 35% 30%, #e2564a, var(--seal) 75%);
+  border: 1px solid rgba(217, 168, 87, 0.7);
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, 0.12),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+.lantern .lantern-body::before {
+  content: "";
+  position: absolute;
+  inset: 4px 8px;
+  border-left: 1px solid rgba(217, 168, 87, 0.5);
+  border-right: 1px solid rgba(217, 168, 87, 0.5);
+}
+.lantern .cap {
+  display: block;
+  width: 14px;
+  height: 4px;
+  margin: 0 auto;
+  background: var(--gold);
+  border-radius: 2px;
+}
+.lantern .tassel {
+  display: block;
+  width: 2px;
+  height: 14px;
+  margin: 0 auto;
+  background: var(--gold);
+}
+@media (max-width: 480px) {
+  .lantern {
+    display: none;
+  }
+}
+@keyframes lanternSway {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+/* ============================================================
+   🎆 ประกายพลุฉลองชัยชนะ หลังตราประทับในหน้าสรุปผล
+============================================================ */
+.fireworks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.fireworks span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+  animation: spark 2.8s ease-out infinite;
+}
+.fireworks span:nth-child(1) {
+  --x: -120px;
+  --y: -90px;
+  background: var(--seal);
+  animation-delay: 0s;
+}
+.fireworks span:nth-child(2) {
+  --x: 110px;
+  --y: -100px;
+  animation-delay: 0.35s;
+}
+.fireworks span:nth-child(3) {
+  --x: -90px;
+  --y: 80px;
+  background: var(--jade);
+  animation-delay: 0.7s;
+}
+.fireworks span:nth-child(4) {
+  --x: 130px;
+  --y: 70px;
+  animation-delay: 1.05s;
+}
+.fireworks span:nth-child(5) {
+  --x: 4px;
+  --y: -130px;
+  background: var(--seal);
+  animation-delay: 1.4s;
+}
+.fireworks span:nth-child(6) {
+  --x: -140px;
+  --y: 10px;
+  animation-delay: 1.75s;
+}
+@keyframes spark {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--x), var(--y)) scale(1);
+    opacity: 0;
+  }
+}
+.result-card > * {
+  position: relative;
+  z-index: 1;
+}
