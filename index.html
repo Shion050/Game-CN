@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HSK 1-5 · เกมเรียนภาษาจีนรูปแบบใหม่</title>
+    <title>เกมเรียนภาษาจีนรูปแบบใหม่</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Kanit:wght@400;600;800&family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
@@ -116,27 +116,32 @@
         </nav>
         <form class="setup-card" id="group-setup-form">
           <div class="form-group">
-            <label for="player-count">จำนวนผู้เข้าร่วมทั้งหมด</label>
+            <label for="player-count">👥 จำนวนผู้เข้าร่วมทั้งหมด</label>
             <div class="input-row">
-              <input type="number" id="player-count" class="number-input" min="2" max="20" value="4" />
+              <div class="stepper">
+                <button type="button" class="stepper-btn" id="player-count-minus" aria-label="ลดจำนวนผู้เล่น">−</button>
+                <input type="number" id="player-count" class="number-input" min="2" max="20" value="4" />
+                <button type="button" class="stepper-btn" id="player-count-plus" aria-label="เพิ่มจำนวนผู้เล่น">+</button>
+              </div>
               <button type="button" class="btn btn-ghost" id="apply-player-count">อัปเดตช่องชื่อ</button>
             </div>
           </div>
           <div class="form-group">
-            <label>รายชื่อสมาชิก</label>
+            <label>📝 รายชื่อสมาชิก</label>
             <div class="player-list" id="player-name-list"></div>
             <button type="button" class="btn btn-ghost btn-add" id="add-player-btn">+ เพิ่มแถวรายชื่อ</button>
           </div>
           <div class="form-group">
-            <label for="team-count">จัดสรรออกเป็น</label>
-            <select id="team-count" class="select-input">
-              <option value="2">2 ทีม</option>
-              <option value="3">3 ทีม</option>
-              <option value="4">4 ทีม</option>
-            </select>
+            <label>🎯 จัดสรรออกเป็น</label>
+            <div class="team-count-picker" id="team-count-picker">
+              <button type="button" class="team-count-chip active" data-count="2">2 <span>ทีม</span></button>
+              <button type="button" class="team-count-chip" data-count="3">3 <span>ทีม</span></button>
+              <button type="button" class="team-count-chip" data-count="4">4 <span>ทีม</span></button>
+            </div>
+            <input type="hidden" id="team-count" value="2" />
           </div>
           <p class="form-note" id="group-setup-error" role="alert"></p>
-          <button type="submit" class="btn btn-primary btn-block" id="randomize-btn"> สุ่มจับสลากแบ่งทีม</button>
+          <button type="submit" class="btn btn-primary btn-block" id="randomize-btn">🎲 สุ่มจับสลากแบ่งทีม</button>
         </form>
       </section>
 
@@ -161,6 +166,31 @@
           <button type="button" class="btn" onclick="openListenGame()"> ฝึกการฟังและออกเสียง</button>
         </div>
         <main class="card-grid" id="subgame-grid"></main>
+      </section>
+
+      <section class="screen" id="screen-memory-difficulty" aria-label="เลือกระดับความยาก Memory Match">
+        <nav class="back-row">
+          <button class="back-btn" type="button" data-back="screen-subgame">← </button>
+          <h2>เลือกระดับความยาก</h2>
+        </nav>
+        <p class="subtitle">ยิ่งจับคู่เยอะ ยิ่งท้าทายความจำมากขึ้น</p>
+        <main class="card-grid" id="memory-difficulty-grid">
+          <button class="level-card" type="button" data-pairs="6">
+            <span class="seal-stamp hanzi">易</span>
+            <span class="info"><span class="title">ง่าย</span><span class="desc">6 คู่ (12 การ์ด)</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-pairs="10">
+            <span class="seal-stamp hanzi">中</span>
+            <span class="info"><span class="title">กลาง</span><span class="desc">10 คู่ (20 การ์ด)</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-pairs="14">
+            <span class="seal-stamp hanzi">难</span>
+            <span class="info"><span class="title">ยาก</span><span class="desc">14 คู่ (28 การ์ด)</span></span>
+            <span class="arrow">▶</span>
+          </button>
+        </main>
       </section>
 
       <section class="screen" id="screen-vocabulary" aria-label="คลังคำศัพท์">
@@ -197,6 +227,7 @@
           <div class="hud-left">
             <p class="progress-text" id="progress-text">ข้อที่ 1 / 10</p>
             <p class="game-name" id="game-name-badge">-</p>
+            <div class="progress-bar"><div class="progress-bar-fill" id="progress-bar-fill"></div></div>
           </div>
           <div class="team-score-row" id="team-score-row"></div>
         </header>
@@ -217,6 +248,7 @@
           <div class="hud-left">
             <p class="progress-text" id="memory-progress">จับคู่แล้ว 0 / 0 คู่</p>
             <p class="game-name">🎴 Memory Match</p>
+            <div class="progress-bar"><div class="progress-bar-fill" id="memory-progress-bar-fill"></div></div>
           </div>
           <div class="team-score-row" id="memory-score-row"></div>
         </header>

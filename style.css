@@ -106,13 +106,83 @@ body {
 }
 .screen.active {
   display: block;
-  animation: fadeIn 0.35s ease;
+  animation: screenEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes fadeIn {
+@keyframes screenEnter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ปุ่ม/การ์ดยุบตัวลงเล็กน้อยตอนกดเพื่อเพิ่มความรู้สึก "กดโต้ตอบ" ทั่วเว็บ */
+.level-card,
+.option,
+.audio-btn,
+.back-btn {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.level-card:active {
+  transform: scale(0.97);
+}
+.option:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.07);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes shakeX {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-7px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+@keyframes scoreBump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18);
+    color: var(--gold);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.95);
   }
   to {
     opacity: 1;
@@ -245,15 +315,51 @@ body {
   gap: 16px;
   width: 100%;
   font-family: "Sarabun", sans-serif;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+  overflow: hidden;
+  animation: cardIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.card-grid .level-card:nth-child(1) {
+  animation-delay: 0.03s;
+}
+.card-grid .level-card:nth-child(2) {
+  animation-delay: 0.09s;
+}
+.card-grid .level-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.card-grid .level-card:nth-child(4) {
+  animation-delay: 0.21s;
+}
+.card-grid .level-card:nth-child(5) {
+  animation-delay: 0.27s;
+}
+.card-grid .level-card:nth-child(6) {
+  animation-delay: 0.33s;
 }
 .level-card:hover,
 .level-card:focus-visible {
   transform: translateY(-3px) rotate(-0.3deg);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
   outline: none;
+}
+/* ประกายแสงพาดผ่านการ์ดตอน hover ให้ความรู้สึกกระดาษเคลือบมัน */
+.level-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.level-card:hover::before {
+  transform: translateX(120%);
 }
 
 /* ตราประทับสีแดงด้านซ้ายของการ์ด (แบบตราประทับหยกโบราณ 2 ชั้น) */
@@ -326,12 +432,27 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+/* ลายน้ำอักษรจีน "组" (กลุ่ม/ทีม) มุมขวาบน ให้เข้าธีมเดียวกับการ์ดอื่นๆ */
+.setup-card::before {
+  content: "组";
+  font-family: "Noto Serif SC", serif;
+  font-weight: 900;
+  position: absolute;
+  top: -28px;
+  right: -8px;
+  font-size: 110px;
+  color: rgba(193, 56, 45, 0.06);
+  pointer-events: none;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: relative;
 }
 .form-group > label {
   font-family: "Kanit", sans-serif;
@@ -355,12 +476,58 @@ body {
   color: var(--text-on-paper);
   font-family: "Sarabun", sans-serif;
   font-size: 14px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.number-input:focus,
+.select-input:focus,
+.text-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(217, 168, 87, 0.2);
 }
 .number-input {
-  max-width: 110px;
+  max-width: 70px;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+.number-input::-webkit-outer-spin-button,
+.number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .text-input::placeholder {
   color: #b0a498;
+}
+
+/* ปุ่ม +/- ปรับจำนวนผู้เล่นแบบสเต็ปเปอร์ */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stepper-btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 44px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-sm);
+  background: var(--paper-soft);
+  color: var(--seal);
+  font-family: "Kanit", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+.stepper-btn:hover {
+  background: rgba(193, 56, 45, 0.1);
+}
+.stepper-btn:active {
+  transform: scale(0.92);
 }
 
 /* รายการช่องกรอกชื่อผู้เล่น */
@@ -373,9 +540,24 @@ body {
   display: flex;
   gap: 8px;
   align-items: center;
+  animation: cardIn 0.3s ease backwards;
 }
 .player-list-item .text-input {
   flex: 1;
+}
+.player-avatar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: "Kanit", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 .remove-player-btn {
   flex-shrink: 0;
@@ -387,9 +569,49 @@ body {
   color: var(--seal);
   font-size: 16px;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 .remove-player-btn:hover {
   background: rgba(193, 56, 45, 0.2);
+}
+
+/* ชิปปุ่มเลือกจำนวนทีม แทนดรอปดาวน์ */
+.team-count-picker {
+  display: flex;
+  gap: 10px;
+}
+.team-count-chip {
+  flex: 1;
+  padding: 12px 10px;
+  border-radius: var(--radius-sm);
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  background: var(--paper-soft);
+  color: var(--text-on-paper);
+  font-family: "Kanit", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+.team-count-chip span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.team-count-chip:hover {
+  border-color: var(--gold);
+}
+.team-count-chip.active {
+  border-color: var(--seal);
+  background: rgba(193, 56, 45, 0.1);
+  color: var(--seal);
+  transform: translateY(-2px);
+}
+.team-count-chip.active span {
+  color: var(--seal);
 }
 
 .form-note {
@@ -595,6 +817,24 @@ body {
   font-weight: 600;
 }
 
+/* แถบความคืบหน้าแบบภาพ ใต้ข้อความ "ข้อที่ N / M" */
+.progress-bar {
+  width: 160px;
+  max-width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold), var(--seal));
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 /* แถบคะแนนทีม */
 .team-score-row {
   display: flex;
@@ -623,6 +863,10 @@ body {
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+.team-score-badge.bump strong {
+  display: inline-block;
+  animation: scoreBump 0.5s ease;
 }
 
 /* การ์ดคำถาม */
@@ -730,6 +974,7 @@ body {
 .option.correct {
   background: rgba(94, 140, 122, 0.16);
   border-color: var(--jade);
+  animation: popIn 0.4s ease;
 }
 .option.correct .opt-letter {
   background: var(--jade);
@@ -738,6 +983,7 @@ body {
 .option.wrong {
   background: rgba(193, 56, 45, 0.12);
   border-color: var(--seal);
+  animation: shakeX 0.4s ease;
 }
 .option.wrong .opt-letter {
   background: var(--seal);
@@ -782,11 +1028,13 @@ body {
   border-color: var(--jade);
   color: var(--jade);
   background: rgba(94, 140, 122, 0.16);
+  animation: popIn 0.4s ease;
 }
 .fill-blank.wrong {
   border-color: var(--seal);
   color: var(--seal);
   background: rgba(193, 56, 45, 0.12);
+  animation: shakeX 0.4s ease;
 }
 
 /* คลังคำศัพท์ให้ลาก/แตะไปเติมในช่องว่าง */
@@ -841,10 +1089,12 @@ body {
   border-color: var(--jade);
   color: var(--jade);
   background: rgba(94, 140, 122, 0.16);
+  animation: popIn 0.4s ease;
 }
 .guess-slots.wrong .guess-slot {
   border-color: var(--seal);
   background: rgba(193, 56, 45, 0.12);
+  animation: shakeX 0.4s ease;
 }
 .guess-reveal {
   text-align: center;
@@ -1660,9 +1910,14 @@ body {
   border-color: var(--jade);
   color: var(--jade);
   opacity: 0.8;
+  animation: popIn 0.4s ease;
 }
 .memory-card.matched .cn {
   color: var(--jade);
+}
+.memory-card.mismatch {
+  border-color: var(--seal);
+  animation: shakeX 0.4s ease;
 }
 
 .memory-audio-btn {

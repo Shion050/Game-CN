@@ -190,6 +190,7 @@ const screens = {
   listen: document.getElementById("screen-listen"),
   game: document.getElementById("screen-game"),
   memory: document.getElementById("screen-memory"),
+  "memory-difficulty": document.getElementById("screen-memory-difficulty"),
   leaderboard: document.getElementById("screen-leaderboard"),
   result: document.getElementById("screen-result"),
 };
@@ -257,18 +258,27 @@ function initGroupSetup() {
   generatePlayerInputs();
 }
 
+// สีอวาตาร์ไล่วนตามลำดับผู้เล่น ให้แต่ละแถวดูมีชีวิตชีวาแตกต่างกัน
+const PLAYER_AVATAR_COLORS = ["var(--seal)", "var(--gold)", "var(--jade)"];
+
+function playerRowHtml(i) {
+  const color = PLAYER_AVATAR_COLORS[(i - 1) % PLAYER_AVATAR_COLORS.length];
+  return `
+    <div class="player-list-item">
+      <span class="player-avatar" style="background:${color};">${i}</span>
+      <input type="text" class="text-input player-name-field" value="ผู้เล่น ${i}" placeholder="ระบุชื่อผู้เล่น" />
+      <button type="button" class="remove-player-btn" aria-label="ลบผู้เล่นแถวนี้">✕</button>
+    </div>
+  `;
+}
+
 function generatePlayerInputs() {
   const count = parseInt(document.getElementById("player-count").value) || 4;
   const listContainer = document.getElementById("player-name-list");
   if (!listContainer) return;
   listContainer.innerHTML = "";
   for (let i = 1; i <= count; i++) {
-    listContainer.innerHTML += `
-      <div class="player-list-item">
-        <input type="text" class="text-input player-name-field" value="ผู้เล่น ${i}" placeholder="ระบุชื่อผู้เล่น" />
-        <button type="button" class="remove-player-btn" aria-label="ลบผู้เล่นแถวนี้">✕</button>
-      </div>
-    `;
+    listContainer.innerHTML += playerRowHtml(i);
   }
 }
 
@@ -279,9 +289,8 @@ document.getElementById("add-player-btn")?.addEventListener("click", () => {
   if (currentCount >= 20) return;
   const i = currentCount + 1;
   const div = document.createElement("div");
-  div.className = "player-list-item";
-  div.innerHTML = `<input type="text" class="text-input player-name-field" value="ผู้เล่น ${i}" placeholder="ระบุชื่อผู้เล่น" /><button type="button" class="remove-player-btn" aria-label="ลบผู้เล่นแถวนี้">✕</button>`;
-  inputContainer.appendChild(div);
+  div.innerHTML = playerRowHtml(i).trim();
+  inputContainer.appendChild(div.firstElementChild);
   document.getElementById("player-count").value = i;
 });
 
@@ -292,6 +301,31 @@ document.getElementById("player-name-list")?.addEventListener("click", (e) => {
   if (listContainer.children.length <= 2) return;
   e.target.closest(".player-list-item")?.remove();
   document.getElementById("player-count").value = listContainer.children.length;
+});
+
+// ปุ่ม +/- ปรับจำนวนผู้เล่นแบบรวดเร็ว แล้วอัปเดตช่องชื่อทันที
+document.getElementById("player-count-minus")?.addEventListener("click", () => {
+  const input = document.getElementById("player-count");
+  const val = Math.max(2, (parseInt(input.value) || 2) - 1);
+  input.value = val;
+  generatePlayerInputs();
+});
+document.getElementById("player-count-plus")?.addEventListener("click", () => {
+  const input = document.getElementById("player-count");
+  const val = Math.min(20, (parseInt(input.value) || 2) + 1);
+  input.value = val;
+  generatePlayerInputs();
+});
+
+// เลือกจำนวนทีมแบบชิปปุ่ม แทนดรอปดาวน์เดิม
+document.getElementById("team-count-picker")?.addEventListener("click", (e) => {
+  const chip = e.target.closest(".team-count-chip");
+  if (!chip) return;
+  document
+    .querySelectorAll("#team-count-picker .team-count-chip")
+    .forEach((c) => c.classList.remove("active"));
+  chip.classList.add("active");
+  document.getElementById("team-count").value = chip.getAttribute("data-count");
 });
 
 function handleRandomizeGroups() {
@@ -401,8 +435,9 @@ function startSelectedGame(gameKey) {
   state.gameType = gameKey;
 
   // Memory Match ใช้กลไกพลิกการ์ด ไม่ใช่คำถาม 4 ตัวเลือกแบบเกมอื่น จึงแยกเส้นทางไปคนละหน้าจอ
+  // และให้เลือกระดับความยาก (จำนวนคู่) ก่อนเริ่มเล่นทุกครั้ง
   if (gameKey === "memory") {
-    startMemoryGame();
+    showScreen("memory-difficulty");
     return;
   }
 
@@ -427,6 +462,10 @@ function renderQuestion() {
   const progressText = document.getElementById("progress-text");
   if (progressText)
     progressText.textContent = `ข้อที่ ${state.currentQIdx + 1} / ${totalQ}`;
+
+  const progressBarFill = document.getElementById("progress-bar-fill");
+  if (progressBarFill)
+    progressBarFill.style.width = `${(state.currentQIdx / totalQ) * 100}%`;
 
   const badge = document.getElementById("game-name-badge");
   if (badge) badge.textContent = SUBGAMES_CONFIG[state.gameType].name;
@@ -511,18 +550,22 @@ function renderQuestion() {
   renderScoreBadge();
 }
 
+// ทีมที่เพิ่งทำคะแนนล่าสุด ใช้ผูกอนิเมชัน "เด้งคะแนน" ให้ badge ของทีมนั้นเพียงครั้งเดียว
+let lastScoreBumpTeamIdx = null;
+
 function renderScoreBadge() {
   const row = document.getElementById("team-score-row");
   if (!row) return;
   row.innerHTML = state.teams
     .map(
-      (t) => `
-    <div class="team-score-badge">
+      (t, idx) => `
+    <div class="team-score-badge${idx === lastScoreBumpTeamIdx ? " bump" : ""}">
       <span>${t.name}</span>: <strong>${t.score} แต้ม</strong>
     </div>
   `,
     )
     .join("");
+  lastScoreBumpTeamIdx = null;
 }
 
 let selectedOptionIdx = null;
@@ -569,6 +612,7 @@ function confirmAnswer() {
     clickedBtn.classList.add("correct");
     activeTeam.score += 10;
     activeTeam.correct += 1;
+    lastScoreBumpTeamIdx = state.currentTeamIdx;
   } else {
     clickedBtn.classList.add("wrong");
     if (buttons[currentQ.correct])
@@ -679,6 +723,7 @@ function confirmGuessAnswer() {
   if (isCorrect) {
     activeTeam.score += 10;
     activeTeam.correct += 1;
+    lastScoreBumpTeamIdx = state.currentTeamIdx;
   } else if (slotsContainer) {
     const revealEl = document.createElement("p");
     revealEl.className = "guess-reveal";
@@ -721,7 +766,7 @@ document.getElementById("next-btn")?.addEventListener("click", () => {
 /* ============================================================
    8.5) Memory Match: พลิกการ์ดจับคู่อักษรจีน (zh) กับคำแปลไทย (th)
 ============================================================ */
-const MEMORY_PAIR_COUNT = 6;
+const MEMORY_PAIR_COUNT_DEFAULT = 6;
 
 const memoryState = {
   cards: [],
@@ -731,12 +776,21 @@ const memoryState = {
   lock: false,
 };
 
-function startMemoryGame() {
+// เลือกระดับความยาก (จำนวนคู่) ก่อนเริ่มเกม Memory Match ทุกครั้ง
+document.querySelectorAll("#memory-difficulty-grid .level-card").forEach((card) => {
+  card.addEventListener("click", () => {
+    const pairCount = parseInt(card.getAttribute("data-pairs"), 10) || MEMORY_PAIR_COUNT_DEFAULT;
+    startMemoryGame(pairCount);
+  });
+});
+
+function startMemoryGame(requestedPairCount = MEMORY_PAIR_COUNT_DEFAULT) {
+  state.gameType = "memory";
   const rawVocab =
     typeof VOCABULARY !== "undefined" && VOCABULARY[state.hsk]
       ? VOCABULARY[state.hsk]
       : [];
-  const pairCount = Math.min(MEMORY_PAIR_COUNT, rawVocab.length);
+  const pairCount = Math.min(requestedPairCount, rawVocab.length);
   const chosen = [...rawVocab].sort(() => Math.random() - 0.5).slice(0, pairCount);
 
   const cards = [];
@@ -773,6 +827,7 @@ function renderMemoryBoard() {
     cardEl.className = "memory-card";
     cardEl.dataset.idx = idx;
     if (card.matched) cardEl.classList.add("matched");
+    if (card.mismatch) cardEl.classList.add("mismatch");
 
     if (card.flipped || card.matched) {
       cardEl.classList.add("flipped");
@@ -796,6 +851,10 @@ function updateMemoryProgress() {
   if (progress)
     progress.textContent = `จับคู่แล้ว ${memoryState.matchedPairs} / ${memoryState.totalPairs} คู่`;
 
+  const progressBarFill = document.getElementById("memory-progress-bar-fill");
+  if (progressBarFill)
+    progressBarFill.style.width = `${(memoryState.matchedPairs / memoryState.totalPairs) * 100}%`;
+
   const turnIndicator = document.getElementById("memory-turn-indicator");
   if (turnIndicator) {
     turnIndicator.textContent =
@@ -808,13 +867,14 @@ function updateMemoryProgress() {
   if (scoreRow) {
     scoreRow.innerHTML = state.teams
       .map(
-        (t) => `
-      <div class="team-score-badge">
+        (t, idx) => `
+      <div class="team-score-badge${idx === lastScoreBumpTeamIdx ? " bump" : ""}">
         <span>${t.name}</span>: <strong>${t.score} แต้ม</strong>
       </div>
     `,
       )
       .join("");
+    lastScoreBumpTeamIdx = null;
   }
 }
 
@@ -848,6 +908,7 @@ function handleMemoryCardClick(idx) {
         const activeTeam = state.teams[state.currentTeamIdx];
         activeTeam.score += 10;
         activeTeam.correct += 1;
+        lastScoreBumpTeamIdx = state.currentTeamIdx;
 
         renderMemoryBoard();
 
@@ -856,9 +917,16 @@ function handleMemoryCardClick(idx) {
         }
       }, 500);
     } else {
+      // โชว์อาการสั่นให้เห็นว่าจับคู่ผิดก่อน ค่อยพลิกกลับหลังจากนั้นสักครู่
+      first.mismatch = true;
+      second.mismatch = true;
+      renderMemoryBoard();
+
       setTimeout(() => {
         first.flipped = false;
         second.flipped = false;
+        first.mismatch = false;
+        second.mismatch = false;
         memoryState.flipped = [];
         memoryState.lock = false;
 
