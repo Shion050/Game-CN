@@ -8,7 +8,7 @@ const state = {
   mode: "solo", // solo หรือ group
   teams: [], // ข้อมูลทีม/ผู้เล่น [{ name, score, correct }]
   currentTeamIdx: 0, // ทีมที่กำลังเล่นรอบนี้
-  gameType: "quiz", // ประเภทเกมย่อย (quiz, match, guess, fill, bingo)
+  gameType: "quiz", // ประเภทเกมย่อย (quiz, guess, fill, bingo)
   questions: [], // รายการโจทย์คำถามที่ถูกสุ่มเจเนอเรตขึ้นมาในรอบนั้นๆ
   currentQIdx: 0, // ดัชนีข้อปัจจุบัน
 };
@@ -20,10 +20,6 @@ const SUBGAMES_CONFIG = {
   quiz: {
     name: "🎄 Quiz Game (สี่ตัวเลือก)",
     desc: "อ่านอักษรจีนปริศนา แล้วทายความหมายภาษาไทยให้ถูกต้อง",
-  },
-  match: {
-    name: "🎴 Vocabulary Matching",
-    desc: "เกมจับคู่ท้าทายความจำ: อักษรจีนตัวนี้ แปลไทยว่าข้อใด",
   },
   guess: {
     name: "🔍 Guess The Word",
@@ -80,8 +76,7 @@ function generateDynamicQuestions(hskLevel, gameType, count = 10) {
     // แตกแขนงลักษณะโจทย์และตัวเลือกตามประเภทเกมย่อยที่กดเล่น
     switch (gameType) {
       case "quiz":
-      case "match":
-        qText = `คำว่า <span class="cn" style="font-size:32px; color:var(--seal); font-weight:700;">${targetWord.zh}</span> แปลว่าอะไร?`;
+        qText = `คำว่า <span class="cn" style="font-size:32px; color:var(--seal); font-weight:700;">${targetWord.zh}</span> <span style="font-size:16px; color:var(--gold); font-weight:600;">(${targetWord.py})</span> แปลว่าอะไร?`;
         options = [
           targetWord.th,
           selectedWrong[0].th,
@@ -111,12 +106,12 @@ function generateDynamicQuestions(hskLevel, gameType, count = 10) {
         break;
 
       case "bingo":
-        qText = `ข้อใดจับคู่คำว่า <span class="cn" style="font-size:26px;">${targetWord.zh}</span> กับเสียงอ่านพินอินได้ถูกต้อง?`;
+        qText = `ข้อใดคือเสียงอ่านพินอินของคำว่า <span class="cn" style="font-size:26px;">${targetWord.zh}</span> ?`;
         options = [
-          `${targetWord.zh} (${targetWord.py})`,
-          `${selectedWrong[0].zh} (${selectedWrong[1].py})`,
-          `${selectedWrong[1].zh} (${selectedWrong[0].py})`,
-          `${selectedWrong[2].zh} (${targetWord.py})`,
+          targetWord.py,
+          selectedWrong[0].py,
+          selectedWrong[1].py,
+          selectedWrong[2].py,
         ];
         break;
 
@@ -139,6 +134,7 @@ function generateDynamicQuestions(hskLevel, gameType, count = 10) {
       q: qText,
       options: options,
       correct: correctIdx,
+      audioText: targetWord.zh,
     });
   }
 
@@ -404,6 +400,11 @@ function renderQuestion() {
   const qTextEl = document.getElementById("question-text");
   if (qTextEl) qTextEl.innerHTML = currentQ.q;
 
+  const audioBtn = document.getElementById("question-audio-btn");
+  if (audioBtn) {
+    audioBtn.onclick = () => speakChinese(currentQ.audioText);
+  }
+
   const optionsContainer = document.getElementById("options-container");
   if (!optionsContainer) return;
   optionsContainer.innerHTML = "";
@@ -584,8 +585,9 @@ function openVocabulary() {
 
   box.innerHTML = words
     .map(
-      (word) => `
+      (word, idx) => `
     <div class="vocab-card">
+      <button type="button" class="audio-btn" data-vocab-idx="${idx}" aria-label="ฟังเสียงอ่าน ${word.zh}">🔊</button>
       <h3>${word.zh}</h3>
       <p class="vocab-py">${word.py}</p>
       <p class="vocab-th">${word.th}</p>
@@ -593,6 +595,13 @@ function openVocabulary() {
   `,
     )
     .join("");
+
+  box.querySelectorAll(".audio-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.getAttribute("data-vocab-idx"));
+      if (words[idx]) speakChinese(words[idx].zh);
+    });
+  });
 }
 
 let listenIndex = 0;
@@ -601,6 +610,7 @@ function openListenGame() {
   listenIndex = 0;
   showScreen("listen");
   updateListenWord();
+  resetScoreResult();
 }
 
 function updateListenWord() {
@@ -645,15 +655,11 @@ function getNativeChineseVoice() {
   );
 }
 
-function playAudio() {
-  const words =
-    typeof VOCABULARY !== "undefined" && VOCABULARY[state.hsk]
-      ? VOCABULARY[state.hsk]
-      : [];
-  if (words.length === 0 || !words[listenIndex]) return;
-
+// ฟังก์ชันกลางสำหรับอ่านออกเสียงคำจีนด้วยเสียงเจ้าของภาษา ใช้ร่วมกันได้ทุกหน้าที่มีคำศัพท์จีน
+function speakChinese(text, rate = 0.8) {
+  if (!text || typeof window.speechSynthesis === "undefined") return;
   window.speechSynthesis.cancel();
-  const speech = new SpeechSynthesisUtterance(words[listenIndex].zh);
+  const speech = new SpeechSynthesisUtterance(text);
   const nativeVoice = getNativeChineseVoice();
   if (nativeVoice) {
     speech.voice = nativeVoice;
@@ -661,8 +667,17 @@ function playAudio() {
   } else {
     speech.lang = "zh-CN";
   }
-  speech.rate = 0.75;
+  speech.rate = rate;
   window.speechSynthesis.speak(speech);
+}
+
+function playAudio() {
+  const words =
+    typeof VOCABULARY !== "undefined" && VOCABULARY[state.hsk]
+      ? VOCABULARY[state.hsk]
+      : [];
+  if (words.length === 0 || !words[listenIndex]) return;
+  speakChinese(words[listenIndex].zh, 0.75);
 }
 
 function nextListen() {
@@ -673,7 +688,126 @@ function nextListen() {
   if (words.length === 0) return;
   listenIndex = (listenIndex + 1) % words.length;
   updateListenWord();
+  resetScoreResult();
 }
+
+/* ============================================================
+   11) อัดเสียงผู้เรียนแล้วส่งให้ AI (OpenAI Whisper + GPT) ให้คะแนนความถูกต้อง
+============================================================ */
+const PRONUNCIATION_API_BASE = "http://localhost:3001";
+
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+
+function resetScoreResult() {
+  const statusEl = document.getElementById("record-status");
+  const resultEl = document.getElementById("score-result");
+  if (statusEl) statusEl.textContent = "";
+  if (resultEl) resultEl.hidden = true;
+}
+
+async function toggleRecording() {
+  if (isRecording) {
+    mediaRecorder?.stop();
+    return;
+  }
+
+  const statusEl = document.getElementById("record-status");
+  const recordBtn = document.getElementById("record-btn");
+  const resultEl = document.getElementById("score-result");
+  if (resultEl) resultEl.hidden = true;
+
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    if (statusEl)
+      statusEl.textContent = "❌ ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตการใช้งานไมค์";
+    return;
+  }
+
+  recordedChunks = [];
+  mediaRecorder = new MediaRecorder(stream);
+
+  mediaRecorder.addEventListener("dataavailable", (e) => {
+    if (e.data.size > 0) recordedChunks.push(e.data);
+  });
+
+  mediaRecorder.addEventListener("stop", () => {
+    stream.getTracks().forEach((track) => track.stop());
+    isRecording = false;
+    if (recordBtn) {
+      recordBtn.textContent = "🎙️ เริ่มอัดเสียง";
+      recordBtn.classList.remove("recording");
+    }
+    const blob = new Blob(recordedChunks, {
+      type: mediaRecorder.mimeType || "audio/webm",
+    });
+    submitRecordingForScoring(blob);
+  });
+
+  mediaRecorder.start();
+  isRecording = true;
+  if (recordBtn) {
+    recordBtn.textContent = "⏹ หยุดอัดเสียง";
+    recordBtn.classList.add("recording");
+  }
+  if (statusEl) statusEl.textContent = "🔴 กำลังอัดเสียง พูดคำศัพท์ให้ชัดเจน...";
+}
+
+async function submitRecordingForScoring(blob) {
+  const words =
+    typeof VOCABULARY !== "undefined" && VOCABULARY[state.hsk]
+      ? VOCABULARY[state.hsk]
+      : [];
+  const targetWord = words[listenIndex];
+  const statusEl = document.getElementById("record-status");
+  if (!targetWord) return;
+
+  if (statusEl) statusEl.textContent = "⏳ กำลังส่งเสียงให้ AI วิเคราะห์...";
+
+  const formData = new FormData();
+  formData.append("audio", blob, "recording.webm");
+  formData.append("zh", targetWord.zh);
+  formData.append("py", targetWord.py);
+  formData.append("th", targetWord.th);
+
+  try {
+    const res = await fetch(`${PRONUNCIATION_API_BASE}/api/pronunciation-score`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "เกิดข้อผิดพลาด");
+
+    if (statusEl) statusEl.textContent = "";
+    renderScoreResult(data);
+  } catch (err) {
+    if (statusEl)
+      statusEl.textContent = `❌ ${err.message || "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์วิเคราะห์เสียงได้"}`;
+  }
+}
+
+function renderScoreResult(data) {
+  const resultEl = document.getElementById("score-result");
+  const numEl = document.getElementById("score-result-num");
+  const heardEl = document.getElementById("score-result-heard");
+  const feedbackEl = document.getElementById("score-result-feedback");
+  if (!resultEl) return;
+
+  resultEl.hidden = false;
+  resultEl.classList.remove("score-good", "score-mid", "score-low");
+  if (data.score >= 80) resultEl.classList.add("score-good");
+  else if (data.score >= 50) resultEl.classList.add("score-mid");
+  else resultEl.classList.add("score-low");
+
+  if (numEl) numEl.textContent = `${data.score}`;
+  if (heardEl) heardEl.textContent = data.heard ? `AI ได้ยินว่า: ${data.heard}` : "";
+  if (feedbackEl) feedbackEl.textContent = data.feedback || "";
+}
+
+document.getElementById("record-btn")?.addEventListener("click", toggleRecording);
 
 // รันแอปพลิเคชันระบบเริ่มต้นตอนเปิดหน้าแรก
 initGroupSetup();

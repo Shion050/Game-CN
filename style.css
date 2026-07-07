@@ -954,6 +954,53 @@ body {
   box-shadow: 0 10px 24px rgba(193, 56, 45, 0.08);
 }
 
+/* ปุ่มไอคอนลำโพงสำหรับฟังเสียงเจ้าของภาษาจีน */
+.audio-btn {
+  font-family: "Sarabun", sans-serif;
+  cursor: pointer;
+  border: 1px solid rgba(217, 168, 87, 0.4);
+  background: var(--paper);
+  color: var(--seal);
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+.audio-btn:hover {
+  background: rgba(193, 56, 45, 0.08);
+  transform: scale(1.05);
+}
+.audio-btn:active {
+  transform: scale(0.95);
+}
+
+.vocab-card .audio-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 1;
+}
+
+.audio-btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  position: relative;
+}
+
 .vocab-card h3 {
   font-family: "Noto Serif SC", serif;
   font-size: 34px;
@@ -1326,4 +1373,88 @@ body {
 .result-card > * {
   position: relative;
   z-index: 1;
+}
+
+/* ============================================================
+   หน้าฝึกพูด: แผงอัดเสียงและผลคะแนนจาก AI
+============================================================ */
+.record-panel {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+}
+
+.record-btn {
+  background: var(--jade);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.record-btn:hover {
+  filter: brightness(1.08);
+}
+.record-btn.recording {
+  background: var(--seal);
+  animation: record-pulse 1.4s ease-in-out infinite;
+}
+@keyframes record-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(193, 56, 45, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(193, 56, 45, 0);
+  }
+}
+
+.record-status {
+  font-family: "Sarabun", sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  min-height: 20px;
+}
+
+.score-result {
+  margin-top: 16px;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: var(--paper-soft);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.score-result-num {
+  font-family: "Kanit", sans-serif;
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+}
+.score-result-num::after {
+  content: " / 100";
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.score-result.score-good .score-result-num {
+  color: var(--jade);
+}
+.score-result.score-mid .score-result-num {
+  color: var(--gold);
+}
+.score-result.score-low .score-result-num {
+  color: var(--seal);
+}
+
+.score-result-heard {
+  font-family: "Noto Serif SC", serif;
+  font-size: 17px;
+  color: var(--text-on-paper);
+  margin-top: 8px;
+}
+
+.score-result-feedback {
+  font-family: "Sarabun", sans-serif;
+  font-size: 14.5px;
+  color: var(--text-muted);
+  margin-top: 8px;
 }

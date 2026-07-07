@@ -175,6 +175,16 @@
           <div id="listen-word" class="hanzi" style="font-size:72px; margin:40px 0; color:var(--seal);">-</div>
           <button type="button" class="btn btn-primary" onclick="playAudio()">🔊 กดฟังเสียงพ่นคำศัพท์</button>
           <button type="button" class="btn btn-ghost" onclick="nextListen()" style="margin-top:15px;">ถัดไป ▶</button>
+
+          <div class="record-panel">
+            <button type="button" class="btn record-btn" id="record-btn">🎙️ เริ่มอัดเสียง</button>
+            <p class="record-status" id="record-status"></p>
+            <div class="score-result" id="score-result" hidden>
+              <div class="score-result-num" id="score-result-num">-</div>
+              <p class="score-result-heard" id="score-result-heard"></p>
+              <p class="score-result-feedback" id="score-result-feedback"></p>
+            </div>
+          </div>
         </main>
         <button type="button" class="back-btn" data-back="screen-subgame" style="display:block; margin:20px auto;">◀ </button>
       </section>
@@ -193,6 +203,7 @@
         <main class="question-card">
           <p class="turn-indicator" id="turn-indicator"></p>
           <h2 id="question-text">คำถามจะปรากฏขึ้นที่นี่</h2>
+          <button type="button" class="audio-btn audio-btn-inline" id="question-audio-btn" aria-label="ฟังเสียงอ่านคำศัพท์">🔊 ฟังเสียง</button>
           <div class="options" id="options-container"></div>
           <button type="button" class="btn btn-primary btn-block next-btn" id="next-btn">ยืนยันข้อต่อไป</button>
         </main>
