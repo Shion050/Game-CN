@@ -8,10 +8,34 @@ const state = {
   mode: "solo", // solo หรือ group
   teams: [], // ข้อมูลทีม/ผู้เล่น [{ name, score, correct }]
   currentTeamIdx: 0, // ทีมที่กำลังเล่นรอบนี้
-  gameType: "quiz", // ประเภทเกมย่อย (quiz, guess, fill, bingo)
+  gameType: "quiz", // ประเภทเกมย่อย (quiz, guess, fill, memory)
   questions: [], // รายการโจทย์คำถามที่ถูกสุ่มเจเนอเรตขึ้นมาในรอบนั้นๆ
   currentQIdx: 0, // ดัชนีข้อปัจจุบัน
 };
+
+/* ============================================================
+   0) คลังประโยคตัวอย่างภาษาจีนจริงสำหรับโหมด Fill In The Blank
+   จัดกลุ่มตามชนิดคำ (type ของคำศัพท์ในไฟล์ vocabulary.js) เพื่อให้
+   ประโยคที่สุ่มออกมาถูกไวยากรณ์เสมอไม่ว่าจะสุ่มได้คำใดในหมวดนั้น
+============================================================ */
+const FILL_TEMPLATES = {
+  greeting: ["她对我说：“___！”", "他笑着说：“___。”"],
+  copula: ["我___学生。"],
+  pronoun: ["___喜欢学中文。", "老师认识___。"],
+  number: ["我有___个苹果。"],
+  time: ["___我要去学校。"],
+  direction: ["书在桌子的___。"],
+  verb: ["我很喜欢___。", "我们一起___吧。"],
+  adj: ["他很___。", "这件事很___。"],
+  noun: ["这是___。", "我喜欢___。"],
+};
+
+// เลือกประโยคตัวอย่าง: ใช้ประโยคเฉพาะของคำนั้น (ถ้ามี) หรือสุ่มจากคลังตามชนิดคำ
+function pickFillSentence(word) {
+  if (word.sentence) return word.sentence;
+  const pool = FILL_TEMPLATES[word.type] || FILL_TEMPLATES.noun;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 /* ============================================================
    1) คอนฟิกูเรชันประเภทเกมย่อย (Subgame Configurations)
@@ -23,15 +47,15 @@ const SUBGAMES_CONFIG = {
   },
   guess: {
     name: "🔍 Guess The Word",
-    desc: "ดูคำอ่านพินอินและคำแปลไทย แล้วทายอักษรจีนที่ถูกต้อง",
+    desc: "แตะตัวอักษรจีนที่กระจัดกระจายมาเรียงต่อกันให้ตรงกับคำอ่านพินอินและคำแปล",
   },
   fill: {
     name: "📝 Fill In The Blank",
     desc: "ค้นหาอักษรจีนระดับเซียนไปเติมในประโยคคำใบ้ให้สมบูรณ์",
   },
-  bingo: {
-    name: "🎲 Chinese Bingo",
-    desc: "สุ่มคำศัพท์ขึ้นมาจับคู่พยากรณ์เสียงอ่านและรูปคำพินอินที่ถูกต้อง",
+  memory: {
+    name: "🎴 Memory Match",
+    desc: "พลิกการ์ดจับคู่อักษรจีนกับคำแปลไทยให้ครบทุกคู่ ยิ่งจำแม่นยิ่งได้คะแนนเยอะ",
   },
 };
 
@@ -72,6 +96,8 @@ function generateDynamicQuestions(hskLevel, gameType, count = 10) {
 
     let qText = "";
     let options = [];
+    let slotAnswer = null;
+    let tiles = null;
 
     // แตกแขนงลักษณะโจทย์และตัวเลือกตามประเภทเกมย่อยที่กดเล่น
     switch (gameType) {
@@ -85,8 +111,35 @@ function generateDynamicQuestions(hskLevel, gameType, count = 10) {
         ];
         break;
 
-      case "guess":
-        qText = `พินอิน <strong style="color:var(--gold); font-size:20px;">"${targetWord.py}"</strong> แปลว่า <strong>"${targetWord.th}"</strong> คืออักษรจีนตัวใด?`;
+      case "guess": {
+        // แตกคำเฉลยออกเป็นตัวอักษรจีนทีละตัว แล้วผสมตัวลวงจากคำอื่นๆ ในระดับเดียวกัน
+        // ให้ผู้เล่นแตะเรียงตัวอักษรที่กระจัดกระจายให้กลับมาเป็นคำที่ถูกต้อง
+        const chars = Array.from(targetWord.zh);
+        const decoyChars = [
+          ...new Set(
+            rawVocab
+              .filter((w) => w.zh !== targetWord.zh)
+              .flatMap((w) => Array.from(w.zh))
+              .filter((ch) => !chars.includes(ch)),
+          ),
+        ].sort(() => Math.random() - 0.5);
+        const decoyCount = Math.min(decoyChars.length, Math.max(2, 6 - chars.length));
+
+        slotAnswer = chars;
+        tiles = [...chars, ...decoyChars.slice(0, decoyCount)].sort(() => Math.random() - 0.5);
+        const slotsHtml = chars
+          .map((_, i) => `<span class="guess-slot" data-slot-idx="${i}"></span>`)
+          .join("");
+        qText = `พินอิน <strong style="color:var(--gold); font-size:20px;">"${targetWord.py}"</strong> แปลว่า <strong>"${targetWord.th}"</strong> จงแตะตัวอักษรจีนที่กระจัดกระจายให้เรียงกลับมาเป็นคำที่ถูกต้อง: <div class="guess-slots" id="guess-slots">${slotsHtml}</div>`;
+        break;
+      }
+
+      case "fill": {
+        const sentenceHtml = pickFillSentence(targetWord).replace(
+          "___",
+          '<span class="fill-blank" id="fill-blank-slot">?</span>',
+        );
+        qText = `จงเลือกคำศัพท์ที่แปลว่า <strong style="color:var(--gold);">"${targetWord.th}"</strong> ไปเติมในประโยคให้ถูกต้อง (ลากหรือแตะเพื่อเลือก): <br><span class="fill-sentence" style="font-size:24px;">${sentenceHtml}</span>`;
         options = [
           targetWord.zh,
           selectedWrong[0].zh,
@@ -94,26 +147,7 @@ function generateDynamicQuestions(hskLevel, gameType, count = 10) {
           selectedWrong[2].zh,
         ];
         break;
-
-      case "fill":
-        qText = `จงเลือกคำศัพท์เติมในช่องว่าง: <br><span class="cn" style="font-size:24px;">我____ ${targetWord.th}。</span>`;
-        options = [
-          targetWord.zh,
-          selectedWrong[0].zh,
-          selectedWrong[1].zh,
-          selectedWrong[2].zh,
-        ];
-        break;
-
-      case "bingo":
-        qText = `ข้อใดคือเสียงอ่านพินอินของคำว่า <span class="cn" style="font-size:26px;">${targetWord.zh}</span> ?`;
-        options = [
-          targetWord.py,
-          selectedWrong[0].py,
-          selectedWrong[1].py,
-          selectedWrong[2].py,
-        ];
-        break;
+      }
 
       default:
         qText = `คำศัพท์ <span class="cn">${targetWord.zh}</span> ตรงกับข้อใด?`;
@@ -135,6 +169,8 @@ function generateDynamicQuestions(hskLevel, gameType, count = 10) {
       options: options,
       correct: correctIdx,
       audioText: targetWord.zh,
+      slotAnswer,
+      tiles,
     });
   }
 
@@ -153,6 +189,7 @@ const screens = {
   vocabulary: document.getElementById("screen-vocabulary"),
   listen: document.getElementById("screen-listen"),
   game: document.getElementById("screen-game"),
+  memory: document.getElementById("screen-memory"),
   leaderboard: document.getElementById("screen-leaderboard"),
   result: document.getElementById("screen-result"),
 };
@@ -363,6 +400,12 @@ function goToSubgameScreen() {
 function startSelectedGame(gameKey) {
   state.gameType = gameKey;
 
+  // Memory Match ใช้กลไกพลิกการ์ด ไม่ใช่คำถาม 4 ตัวเลือกแบบเกมอื่น จึงแยกเส้นทางไปคนละหน้าจอ
+  if (gameKey === "memory") {
+    startMemoryGame();
+    return;
+  }
+
   // เรียกใช้งาน Engine ยิงคิวรี่สุ่มคำศัพท์จำกัดรอบละ 10 ข้อ
   state.questions = generateDynamicQuestions(state.hsk, gameKey, 10);
   state.currentQIdx = 0;
@@ -409,17 +452,56 @@ function renderQuestion() {
   if (!optionsContainer) return;
   optionsContainer.innerHTML = "";
 
-  currentQ.options.forEach((opt, idx) => {
-    const btn = document.createElement("button");
-    btn.className = "option";
-    btn.type = "button";
-    btn.innerHTML = `<span class="opt-letter">${String.fromCharCode(65 + idx)}</span> <span class="opt-text">${opt}</span>`;
-    btn.addEventListener("click", () => handleSelectOption(idx, btn));
-    optionsContainer.appendChild(btn);
-  });
+  if (state.gameType === "guess") {
+    optionsContainer.classList.remove("fill-word-bank");
+    renderGuessTiles(currentQ, optionsContainer);
+  } else if (state.gameType === "fill") {
+    optionsContainer.classList.remove("guess-tile-bank");
+    optionsContainer.classList.add("fill-word-bank");
+    currentQ.options.forEach((opt, idx) => {
+      const chip = document.createElement("button");
+      chip.className = "option fill-chip";
+      chip.type = "button";
+      chip.draggable = true;
+      chip.innerHTML = `<span class="cn">${opt}</span>`;
+      chip.addEventListener("click", () => handleSelectOption(idx, chip));
+      chip.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", String(idx));
+        e.dataTransfer.effectAllowed = "move";
+      });
+      optionsContainer.appendChild(chip);
+    });
+
+    const blank = document.getElementById("fill-blank-slot");
+    if (blank) {
+      blank.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        blank.classList.add("drag-over");
+      });
+      blank.addEventListener("dragleave", () => blank.classList.remove("drag-over"));
+      blank.addEventListener("drop", (e) => {
+        e.preventDefault();
+        blank.classList.remove("drag-over");
+        const idx = parseInt(e.dataTransfer.getData("text/plain"), 10);
+        const chip = optionsContainer.children[idx];
+        if (chip && !chip.disabled) handleSelectOption(idx, chip);
+      });
+    }
+  } else {
+    optionsContainer.classList.remove("fill-word-bank", "guess-tile-bank");
+    currentQ.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.type = "button";
+      btn.innerHTML = `<span class="opt-letter">${String.fromCharCode(65 + idx)}</span> <span class="opt-text">${opt}</span>`;
+      btn.addEventListener("click", () => handleSelectOption(idx, btn));
+      optionsContainer.appendChild(btn);
+    });
+  }
 
   selectedOptionIdx = null;
   answerConfirmed = false;
+  guessPlacedTiles = [];
 
   const nextBtn = document.getElementById("next-btn");
   if (nextBtn) {
@@ -445,6 +527,7 @@ function renderScoreBadge() {
 
 let selectedOptionIdx = null;
 let answerConfirmed = false;
+let guessPlacedTiles = []; // ลำดับ index ของตัวอักษรจีนใน tile bank ที่ผู้เล่นแตะวางไว้ (โหมด Guess The Word)
 
 // เลือกคำตอบ (ยังไม่ตัดคะแนน) ผู้เล่นสามารถเปลี่ยนใจก่อนกดยืนยันได้
 function handleSelectOption(idx, clickedBtn) {
@@ -456,6 +539,14 @@ function handleSelectOption(idx, clickedBtn) {
     .forEach((b) => b.classList.remove("selected"));
   clickedBtn.classList.add("selected");
 
+  if (state.gameType === "fill") {
+    const blank = document.getElementById("fill-blank-slot");
+    if (blank) {
+      blank.textContent = clickedBtn.textContent.trim();
+      blank.classList.add("filled");
+    }
+  }
+
   const nextBtn = document.getElementById("next-btn");
   if (nextBtn) nextBtn.classList.add("visible");
 }
@@ -466,11 +557,15 @@ function confirmAnswer() {
   const buttons = document.querySelectorAll("#options-container .option");
   const clickedBtn = buttons[selectedOptionIdx];
 
-  buttons.forEach((b) => (b.disabled = true));
+  buttons.forEach((b) => {
+    b.disabled = true;
+    b.draggable = false;
+  });
   clickedBtn.classList.remove("selected");
   const activeTeam = state.teams[state.currentTeamIdx];
+  const isCorrect = selectedOptionIdx === currentQ.correct;
 
-  if (selectedOptionIdx === currentQ.correct) {
+  if (isCorrect) {
     clickedBtn.classList.add("correct");
     activeTeam.score += 10;
     activeTeam.correct += 1;
@@ -478,6 +573,117 @@ function confirmAnswer() {
     clickedBtn.classList.add("wrong");
     if (buttons[currentQ.correct])
       buttons[currentQ.correct].classList.add("correct");
+  }
+
+  if (state.gameType === "fill") {
+    const blank = document.getElementById("fill-blank-slot");
+    if (blank) blank.classList.add(isCorrect ? "correct" : "wrong");
+  }
+
+  renderScoreBadge();
+  answerConfirmed = true;
+
+  const nextBtn = document.getElementById("next-btn");
+  if (nextBtn) nextBtn.textContent = "ข้อต่อไป ▶";
+}
+
+/* ============================================================
+   8.4) Guess The Word: แตะตัวอักษรจีนที่กระจัดกระจายมาเรียงเป็นคำเฉลย
+============================================================ */
+
+// วาดตัวอักษรจีน (ตัวจริง + ตัวลวง) เป็นปุ่มให้แตะ พร้อมปุ่มลบตัวล่าสุด
+function renderGuessTiles(currentQ, container) {
+  const tileWrap = document.createElement("div");
+  tileWrap.className = "guess-tile-bank";
+
+  currentQ.tiles.forEach((ch, tileIdx) => {
+    const tileEl = document.createElement("button");
+    tileEl.type = "button";
+    tileEl.className = "option guess-tile";
+    tileEl.innerHTML = `<span class="cn">${ch}</span>`;
+    tileEl.addEventListener("click", () => handleGuessTileClick(tileIdx, tileEl));
+    tileWrap.appendChild(tileEl);
+  });
+  container.appendChild(tileWrap);
+
+  const undoBtn = document.createElement("button");
+  undoBtn.type = "button";
+  undoBtn.id = "guess-undo-btn";
+  undoBtn.className = "btn btn-ghost guess-undo-btn";
+  undoBtn.textContent = "⌫ ลบตัวล่าสุด";
+  undoBtn.addEventListener("click", handleGuessUndo);
+  container.appendChild(undoBtn);
+
+  renderGuessSlotsUI(currentQ);
+}
+
+// เติมตัวอักษรที่แตะวางแล้วลงในช่องว่างตามลำดับ
+function renderGuessSlotsUI(currentQ) {
+  const slots = document.querySelectorAll("#guess-slots .guess-slot");
+  slots.forEach((slotEl, i) => {
+    const tileIdx = guessPlacedTiles[i];
+    if (tileIdx !== undefined) {
+      slotEl.textContent = currentQ.tiles[tileIdx];
+      slotEl.classList.add("filled");
+    } else {
+      slotEl.textContent = "";
+      slotEl.classList.remove("filled");
+    }
+  });
+}
+
+function handleGuessTileClick(tileIdx, tileEl) {
+  if (answerConfirmed) return;
+  const currentQ = state.questions[state.currentQIdx];
+  if (tileEl.disabled) return;
+  if (guessPlacedTiles.length >= currentQ.slotAnswer.length) return;
+
+  guessPlacedTiles.push(tileIdx);
+  tileEl.disabled = true;
+  tileEl.classList.add("used");
+  renderGuessSlotsUI(currentQ);
+
+  const nextBtn = document.getElementById("next-btn");
+  if (nextBtn) {
+    nextBtn.classList.toggle("visible", guessPlacedTiles.length === currentQ.slotAnswer.length);
+  }
+}
+
+function handleGuessUndo() {
+  if (answerConfirmed || guessPlacedTiles.length === 0) return;
+  const currentQ = state.questions[state.currentQIdx];
+  const lastTileIdx = guessPlacedTiles.pop();
+  const tileButtons = document.querySelectorAll("#options-container .guess-tile");
+  const tileEl = tileButtons[lastTileIdx];
+  if (tileEl) {
+    tileEl.disabled = false;
+    tileEl.classList.remove("used");
+  }
+  renderGuessSlotsUI(currentQ);
+  document.getElementById("next-btn")?.classList.remove("visible");
+}
+
+// กดยืนยันคำตอบของ Guess The Word เทียบลำดับตัวอักษรที่แตะวางกับคำเฉลย
+function confirmGuessAnswer() {
+  const currentQ = state.questions[state.currentQIdx];
+  const assembled = guessPlacedTiles.map((i) => currentQ.tiles[i]);
+  const isCorrect = assembled.join("") === currentQ.slotAnswer.join("");
+  const activeTeam = state.teams[state.currentTeamIdx];
+
+  document.querySelectorAll("#options-container .guess-tile").forEach((b) => (b.disabled = true));
+  document.getElementById("guess-undo-btn")?.setAttribute("disabled", "true");
+
+  const slotsContainer = document.getElementById("guess-slots");
+  if (slotsContainer) slotsContainer.classList.add(isCorrect ? "correct" : "wrong");
+
+  if (isCorrect) {
+    activeTeam.score += 10;
+    activeTeam.correct += 1;
+  } else if (slotsContainer) {
+    const revealEl = document.createElement("p");
+    revealEl.className = "guess-reveal";
+    revealEl.textContent = `เฉลย: ${currentQ.slotAnswer.join("")}`;
+    slotsContainer.after(revealEl);
   }
 
   renderScoreBadge();
@@ -489,8 +695,14 @@ function confirmAnswer() {
 
 document.getElementById("next-btn")?.addEventListener("click", () => {
   if (!answerConfirmed) {
-    if (selectedOptionIdx === null) return;
-    confirmAnswer();
+    if (state.gameType === "guess") {
+      const currentQ = state.questions[state.currentQIdx];
+      if (guessPlacedTiles.length < currentQ.slotAnswer.length) return;
+      confirmGuessAnswer();
+    } else {
+      if (selectedOptionIdx === null) return;
+      confirmAnswer();
+    }
     return;
   }
 
@@ -504,6 +716,171 @@ document.getElementById("next-btn")?.addEventListener("click", () => {
   } else {
     showLeaderboard();
   }
+});
+
+/* ============================================================
+   8.5) Memory Match: พลิกการ์ดจับคู่อักษรจีน (zh) กับคำแปลไทย (th)
+============================================================ */
+const MEMORY_PAIR_COUNT = 6;
+
+const memoryState = {
+  cards: [],
+  flipped: [],
+  matchedPairs: 0,
+  totalPairs: 0,
+  lock: false,
+};
+
+function startMemoryGame() {
+  const rawVocab =
+    typeof VOCABULARY !== "undefined" && VOCABULARY[state.hsk]
+      ? VOCABULARY[state.hsk]
+      : [];
+  const pairCount = Math.min(MEMORY_PAIR_COUNT, rawVocab.length);
+  const chosen = [...rawVocab].sort(() => Math.random() - 0.5).slice(0, pairCount);
+
+  const cards = [];
+  chosen.forEach((word, pairId) => {
+    cards.push({ pairId, kind: "zh", text: word.zh, matched: false, flipped: false });
+    cards.push({ pairId, kind: "th", text: word.th, matched: false, flipped: false });
+  });
+  cards.sort(() => Math.random() - 0.5);
+
+  memoryState.cards = cards;
+  memoryState.flipped = [];
+  memoryState.matchedPairs = 0;
+  memoryState.totalPairs = pairCount;
+  memoryState.lock = false;
+
+  state.currentTeamIdx = 0;
+  state.teams.forEach((t) => {
+    t.score = 0;
+    t.correct = 0;
+  });
+
+  renderMemoryBoard();
+  showScreen("memory");
+}
+
+function renderMemoryBoard() {
+  const grid = document.getElementById("memory-grid");
+  if (!grid) return;
+
+  grid.innerHTML = "";
+  memoryState.cards.forEach((card, idx) => {
+    const cardEl = document.createElement("button");
+    cardEl.type = "button";
+    cardEl.className = "memory-card";
+    cardEl.dataset.idx = idx;
+    if (card.matched) cardEl.classList.add("matched");
+
+    if (card.flipped || card.matched) {
+      cardEl.classList.add("flipped");
+      cardEl.innerHTML = `
+        <span class="${card.kind === "zh" ? "cn" : ""}">${card.text}</span>
+        ${card.kind === "zh" ? '<span class="memory-audio-btn" aria-label="ฟังเสียง">🔊</span>' : ""}
+      `;
+    } else {
+      cardEl.innerHTML = `<span class="memory-back hanzi">问</span>`;
+    }
+
+    cardEl.addEventListener("click", () => handleMemoryCardClick(idx));
+    grid.appendChild(cardEl);
+  });
+
+  updateMemoryProgress();
+}
+
+function updateMemoryProgress() {
+  const progress = document.getElementById("memory-progress");
+  if (progress)
+    progress.textContent = `จับคู่แล้ว ${memoryState.matchedPairs} / ${memoryState.totalPairs} คู่`;
+
+  const turnIndicator = document.getElementById("memory-turn-indicator");
+  if (turnIndicator) {
+    turnIndicator.textContent =
+      state.mode === "group"
+        ? `🎯 รอบของ: ${state.teams[state.currentTeamIdx].name}`
+        : `🎯 ด่านประลองความสามารถเดี่ยว`;
+  }
+
+  const scoreRow = document.getElementById("memory-score-row");
+  if (scoreRow) {
+    scoreRow.innerHTML = state.teams
+      .map(
+        (t) => `
+      <div class="team-score-badge">
+        <span>${t.name}</span>: <strong>${t.score} แต้ม</strong>
+      </div>
+    `,
+      )
+      .join("");
+  }
+}
+
+// พลิกการ์ดที่คลิก แล้วเมื่อเปิดครบ 2 ใบค่อยตัดสินว่าจับคู่ถูกไหม
+function handleMemoryCardClick(idx) {
+  if (memoryState.lock) return;
+  const card = memoryState.cards[idx];
+  if (!card || card.matched || card.flipped) return;
+  if (memoryState.flipped.length >= 2) return;
+
+  card.flipped = true;
+  memoryState.flipped.push(idx);
+  renderMemoryBoard();
+
+  if (card.kind === "zh") speakChinese(card.text);
+
+  if (memoryState.flipped.length === 2) {
+    memoryState.lock = true;
+    const [firstIdx, secondIdx] = memoryState.flipped;
+    const first = memoryState.cards[firstIdx];
+    const second = memoryState.cards[secondIdx];
+
+    if (first.pairId === second.pairId) {
+      setTimeout(() => {
+        first.matched = true;
+        second.matched = true;
+        memoryState.matchedPairs++;
+        memoryState.flipped = [];
+        memoryState.lock = false;
+
+        const activeTeam = state.teams[state.currentTeamIdx];
+        activeTeam.score += 10;
+        activeTeam.correct += 1;
+
+        renderMemoryBoard();
+
+        if (memoryState.matchedPairs === memoryState.totalPairs) {
+          setTimeout(() => showLeaderboard(), 600);
+        }
+      }, 500);
+    } else {
+      setTimeout(() => {
+        first.flipped = false;
+        second.flipped = false;
+        memoryState.flipped = [];
+        memoryState.lock = false;
+
+        if (state.mode === "group") {
+          state.currentTeamIdx = (state.currentTeamIdx + 1) % state.teams.length;
+        }
+
+        renderMemoryBoard();
+      }, 900);
+    }
+  }
+}
+
+// แตะไอคอนลำโพงบนการ์ดที่เปิดแล้วเพื่อฟังเสียงซ้ำ โดยไม่ทำให้การ์ดถูกเลือกซ้ำ
+document.getElementById("memory-grid")?.addEventListener("click", (e) => {
+  const audioBtn = e.target.closest(".memory-audio-btn");
+  if (!audioBtn) return;
+  e.stopPropagation();
+  const cardEl = audioBtn.closest(".memory-card");
+  const idx = parseInt(cardEl?.dataset.idx, 10);
+  const card = memoryState.cards[idx];
+  if (card) speakChinese(card.text);
 });
 
 /* ============================================================

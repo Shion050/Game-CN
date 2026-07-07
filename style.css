@@ -747,6 +747,140 @@ body {
   cursor: default;
 }
 
+/* Fill In The Blank: ช่องว่างในประโยคที่รับการลาก/แตะคำศัพท์ */
+.fill-sentence {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-family: "Noto Serif SC", serif;
+}
+.fill-blank {
+  display: inline-block;
+  min-width: 56px;
+  padding: 2px 14px;
+  border-bottom: 3px dashed var(--gold);
+  text-align: center;
+  color: var(--text-muted);
+  font-weight: 700;
+  border-radius: 6px 6px 0 0;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.fill-blank.drag-over {
+  border-color: var(--seal);
+  background: rgba(193, 56, 45, 0.08);
+}
+.fill-blank.filled {
+  border-style: solid;
+  color: var(--seal);
+  background: rgba(217, 168, 87, 0.14);
+}
+.fill-blank.correct {
+  border-color: var(--jade);
+  color: var(--jade);
+  background: rgba(94, 140, 122, 0.16);
+}
+.fill-blank.wrong {
+  border-color: var(--seal);
+  color: var(--seal);
+  background: rgba(193, 56, 45, 0.12);
+}
+
+/* คลังคำศัพท์ให้ลาก/แตะไปเติมในช่องว่าง */
+.fill-word-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+.fill-chip {
+  width: auto;
+  cursor: grab;
+  font-size: 22px;
+  padding: 10px 22px;
+}
+.fill-chip:active:not(:disabled) {
+  cursor: grabbing;
+}
+.fill-chip:disabled {
+  cursor: default;
+}
+
+/* Guess The Word: ช่องเรียงตัวอักษรจีนที่แตะจาก tile bank */
+.guess-slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+.guess-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-bottom: 3px dashed var(--gold);
+  border-radius: 6px 6px 0 0;
+  font-family: "Noto Serif SC", serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--seal);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.guess-slot.filled {
+  border-style: solid;
+  background: rgba(217, 168, 87, 0.14);
+}
+.guess-slots.correct .guess-slot {
+  border-color: var(--jade);
+  color: var(--jade);
+  background: rgba(94, 140, 122, 0.16);
+}
+.guess-slots.wrong .guess-slot {
+  border-color: var(--seal);
+  background: rgba(193, 56, 45, 0.12);
+}
+.guess-reveal {
+  text-align: center;
+  margin-top: 10px;
+  font-family: "Sarabun", sans-serif;
+  font-size: 14px;
+  color: var(--seal);
+  font-weight: 600;
+}
+
+/* คลังตัวอักษรจีนกระจัดกระจาย (ตัวจริง + ตัวลวง) ให้แตะเรียงลงช่อง */
+.guess-tile-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+.guess-tile {
+  width: auto;
+  font-size: 22px;
+  padding: 10px 18px;
+}
+.guess-tile.used {
+  opacity: 0.35;
+}
+.guess-tile:disabled {
+  cursor: default;
+}
+.guess-undo-btn {
+  display: block;
+  width: auto;
+  margin: 4px auto 0;
+  font-size: 13px;
+  padding: 8px 16px;
+}
+
 /* ปุ่มข้อต่อไป */
 .next-btn {
   margin-top: 22px;
@@ -1457,4 +1591,87 @@ body {
   font-size: 14.5px;
   color: var(--text-muted);
   margin-top: 8px;
+}
+
+/* ============================================================
+   Memory Match: กระดานพลิกการ์ดจับคู่อักษรจีนกับคำแปลไทย
+============================================================ */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 640px;
+  margin: 10px auto 0;
+}
+
+.memory-card {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(217, 168, 87, 0.35);
+  background: linear-gradient(135deg, #d1483c, var(--seal) 70%);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  font-family: "Sarabun", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px;
+  text-align: center;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+.memory-card:hover:not(.flipped):not(.matched) {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+}
+.memory-card:disabled,
+.memory-card.matched {
+  cursor: default;
+}
+
+.memory-card .memory-back {
+  font-family: "Noto Serif SC", serif;
+  font-size: 30px;
+  opacity: 0.85;
+}
+
+.memory-card.flipped {
+  background: var(--paper-soft);
+  color: var(--text-on-paper);
+  border-color: var(--gold);
+  box-shadow: 0 4px 14px rgba(44, 37, 33, 0.1);
+  cursor: default;
+}
+.memory-card.flipped .cn {
+  font-family: "Noto Serif SC", serif;
+  font-size: clamp(18px, 5vw, 24px);
+  font-weight: 700;
+  color: var(--seal);
+}
+
+.memory-card.matched {
+  background: rgba(94, 140, 122, 0.18);
+  border-color: var(--jade);
+  color: var(--jade);
+  opacity: 0.8;
+}
+.memory-card.matched .cn {
+  color: var(--jade);
+}
+
+.memory-audio-btn {
+  font-size: 13px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .memory-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
