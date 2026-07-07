@@ -6,8 +6,7 @@
   "main": "index.html",
   "scripts": {
     "start": "live-server --port=5500 --no-browser",
-    "dev": "live-server --port=5500",
-    "server": "node server.js"
+    "dev": "live-server --port=5500"
   },
   "keywords": [
     "hsk",
@@ -20,10 +19,6 @@
     "live-server": "^1.2.2"
   },
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "multer": "^2.2.0",
-    "openai": "^6.45.0"
+    "canvas-confetti": "^1.9.4"
   }
 }

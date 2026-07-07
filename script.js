@@ -6,12 +6,91 @@
 const state = {
   hsk: "hsk1", // ระดับ HSK ที่เลือก (hsk1, hsk2, hsk3, hsk4, hsk5)
   mode: "solo", // solo หรือ group
-  teams: [], // ข้อมูลทีม/ผู้เล่น [{ name, score, correct }]
+  teams: [], // ข้อมูลทีม/ผู้เล่น [{ name, score, correct, combo }]
   currentTeamIdx: 0, // ทีมที่กำลังเล่นรอบนี้
   gameType: "quiz", // ประเภทเกมย่อย (quiz, guess, fill, memory)
   questions: [], // รายการโจทย์คำถามที่ถูกสุ่มเจเนอเรตขึ้นมาในรอบนั้นๆ
   currentQIdx: 0, // ดัชนีข้อปัจจุบัน
 };
+
+/* ============================================================
+   0.5) เอฟเฟกต์เสียง + คอนเฟตตี้ + ระบบคอมโบ ใช้ร่วมกันได้ทุกโหมดเกม
+============================================================ */
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new Ctx();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+// สร้างเสียงบี๊พสั้นๆ ด้วย Web Audio API ล้วนๆ ไม่ต้องพึ่งไฟล์เสียงภายนอก
+function playTone(freq, duration, delay = 0, type = "sine", volume = 0.15) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, ctx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration);
+  } catch (err) {
+    // เบราว์เซอร์บางตัวอาจบล็อก AudioContext ก่อนมี user gesture — ปล่อยผ่านเงียบๆ ไม่กระทบเกม
+  }
+}
+
+function playCorrectSound() {
+  playTone(880, 0.12, 0, "sine");
+  playTone(1318.5, 0.16, 0.1, "sine");
+}
+
+function playWrongSound() {
+  playTone(160, 0.25, 0, "sawtooth", 0.12);
+}
+
+function playFanfare() {
+  [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) =>
+    playTone(freq, 0.2, i * 0.12, "triangle"),
+  );
+}
+
+const THEME_CONFETTI_COLORS = ["#c1382d", "#d9a857", "#5e8c7a", "#ffffff"];
+
+function fireConfetti(options = {}) {
+  if (typeof confetti !== "function") return;
+  confetti({
+    particleCount: 60,
+    spread: 70,
+    origin: { y: 0.6 },
+    colors: THEME_CONFETTI_COLORS,
+    ...options,
+  });
+}
+
+function fireBigConfetti() {
+  fireConfetti({ particleCount: 140, spread: 100, startVelocity: 45 });
+}
+
+// ตัดสินผลตอบถูก/ผิดของทีม แล้วอัปเดตคอมโบ + เสียง + คอนเฟตตี้ให้สอดคล้องกัน
+function registerAnswerResult(team, isCorrect) {
+  if (isCorrect) {
+    team.combo = (team.combo || 0) + 1;
+    playCorrectSound();
+    fireConfetti();
+    if (team.combo >= 3 && team.combo % 3 === 0) {
+      fireBigConfetti();
+    }
+  } else {
+    team.combo = 0;
+    playWrongSound();
+  }
+}
 
 /* ============================================================
    0) คลังประโยคตัวอย่างภาษาจีนจริงสำหรับโหมด Fill In The Blank
@@ -233,7 +312,7 @@ document.querySelectorAll("#mode-grid .level-card").forEach((card) => {
   card.addEventListener("click", () => {
     state.mode = card.getAttribute("data-mode");
     if (state.mode === "solo") {
-      state.teams = [{ name: "ผู้เล่นเดี่ยว", score: 0, correct: 0 }];
+      state.teams = [{ name: "ผู้เล่นเดี่ยว", score: 0, correct: 0, combo: 0 }];
       goToSubgameScreen();
     } else {
       showScreen("group-setup");
@@ -352,6 +431,7 @@ function handleRandomizeGroups() {
       members: [],
       score: 0,
       correct: 0,
+      combo: 0,
     });
   }
   names.forEach((name, idx) => {
@@ -449,6 +529,7 @@ function startSelectedGame(gameKey) {
   state.teams.forEach((t) => {
     t.score = 0;
     t.correct = 0;
+    t.combo = 0;
   });
 
   renderQuestion();
@@ -561,6 +642,7 @@ function renderScoreBadge() {
       (t, idx) => `
     <div class="team-score-badge${idx === lastScoreBumpTeamIdx ? " bump" : ""}">
       <span>${t.name}</span>: <strong>${t.score} แต้ม</strong>
+      ${t.combo >= 2 ? `<span class="combo-badge">🔥x${t.combo}</span>` : ""}
     </div>
   `,
     )
@@ -618,6 +700,7 @@ function confirmAnswer() {
     if (buttons[currentQ.correct])
       buttons[currentQ.correct].classList.add("correct");
   }
+  registerAnswerResult(activeTeam, isCorrect);
 
   if (state.gameType === "fill") {
     const blank = document.getElementById("fill-blank-slot");
@@ -730,6 +813,7 @@ function confirmGuessAnswer() {
     revealEl.textContent = `เฉลย: ${currentQ.slotAnswer.join("")}`;
     slotsContainer.after(revealEl);
   }
+  registerAnswerResult(activeTeam, isCorrect);
 
   renderScoreBadge();
   answerConfirmed = true;
@@ -810,6 +894,7 @@ function startMemoryGame(requestedPairCount = MEMORY_PAIR_COUNT_DEFAULT) {
   state.teams.forEach((t) => {
     t.score = 0;
     t.correct = 0;
+    t.combo = 0;
   });
 
   renderMemoryBoard();
@@ -870,6 +955,7 @@ function updateMemoryProgress() {
         (t, idx) => `
       <div class="team-score-badge${idx === lastScoreBumpTeamIdx ? " bump" : ""}">
         <span>${t.name}</span>: <strong>${t.score} แต้ม</strong>
+        ${t.combo >= 2 ? `<span class="combo-badge">🔥x${t.combo}</span>` : ""}
       </div>
     `,
       )
@@ -909,10 +995,12 @@ function handleMemoryCardClick(idx) {
         activeTeam.score += 10;
         activeTeam.correct += 1;
         lastScoreBumpTeamIdx = state.currentTeamIdx;
+        registerAnswerResult(activeTeam, true);
 
         renderMemoryBoard();
 
         if (memoryState.matchedPairs === memoryState.totalPairs) {
+          fireBigConfetti();
           setTimeout(() => showLeaderboard(), 600);
         }
       }, 500);
@@ -920,6 +1008,7 @@ function handleMemoryCardClick(idx) {
       // โชว์อาการสั่นให้เห็นว่าจับคู่ผิดก่อน ค่อยพลิกกลับหลังจากนั้นสักครู่
       first.mismatch = true;
       second.mismatch = true;
+      registerAnswerResult(state.teams[state.currentTeamIdx], false);
       renderMemoryBoard();
 
       setTimeout(() => {
@@ -973,6 +1062,8 @@ function showLeaderboard() {
     )
     .join("");
 
+  playFanfare();
+  fireBigConfetti();
   showScreen("leaderboard");
 }
 
@@ -1137,17 +1228,11 @@ function nextListen() {
 }
 
 /* ============================================================
-   11) อัดเสียงผู้เรียนแล้วส่งให้ AI (OpenAI Whisper + GPT) ให้คะแนนความถูกต้อง
+   11) ฝึกพูดแล้วให้คะแนนความถูกต้อง — ฟรี 100% ไม่มีค่าใช้จ่าย
+   ใช้ Web Speech API ถอดเสียงในเบราว์เซอร์เอง (Chrome/Edge) แล้วเทียบคำ
+   ด้วยโค้ดฝั่ง client ล้วนๆ ไม่ต้องพึ่ง AI API หรือ backend server ใดๆ
 ============================================================ */
-// ตอนรันในเครื่อง (localhost) จะยิงไป backend เครื่องเดียวกันอัตโนมัติ
-// ส่วนตอน deploy ขึ้นจริง ให้แก้ URL ด้านล่างเป็นลิงก์ backend ที่ deploy ไว้ (เช่น Render)
-const PRONUNCIATION_API_BASE =
-  location.hostname === "localhost" || location.hostname === "127.0.0.1"
-    ? "http://localhost:3001"
-    : "https://your-backend-service.onrender.com"; // TODO: แก้เป็น URL จริงหลัง deploy backend
-
-let mediaRecorder = null;
-let recordedChunks = [];
+let speechRecognizer = null;
 let isRecording = false;
 
 function resetScoreResult() {
@@ -1157,86 +1242,111 @@ function resetScoreResult() {
   if (resultEl) resultEl.hidden = true;
 }
 
-async function toggleRecording() {
+// ระยะแก้ไขต่ำสุด (Levenshtein distance) นับทีละตัวอักษร ใช้วัดความต่างของคำที่ถอดเสียงได้
+function levenshteinDistance(a, b) {
+  const arrA = Array.from(a);
+  const arrB = Array.from(b);
+  const dp = Array.from({ length: arrA.length + 1 }, () => new Array(arrB.length + 1).fill(0));
+  for (let i = 0; i <= arrA.length; i++) dp[i][0] = i;
+  for (let j = 0; j <= arrB.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= arrA.length; i++) {
+    for (let j = 1; j <= arrB.length; j++) {
+      dp[i][j] =
+        arrA[i - 1] === arrB[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[arrA.length][arrB.length];
+}
+
+// แปลงระยะแก้ไขเป็นคะแนนความคล้าย 0-100 เทียบกับคำเป้าหมาย
+function scorePronunciation(heard, target) {
+  const targetLen = Array.from(target || "").length;
+  if (targetLen === 0) return 0;
+  const distance = levenshteinDistance(heard || "", target || "");
+  const maxLen = Math.max(Array.from(heard || "").length, targetLen, 1);
+  return Math.max(0, Math.round((1 - distance / maxLen) * 100));
+}
+
+function feedbackForScore(score) {
+  if (score >= 90) return "ออกเสียงถูกต้องมาก เยี่ยมมาก! 🎉";
+  if (score >= 70) return "ใกล้เคียงแล้ว ลองฟังตัวอย่างแล้วออกเสียงให้ชัดขึ้นอีกนิด";
+  if (score >= 40) return "ยังไม่ค่อยตรง ลองฟังเสียงตัวอย่างแล้วพูดตามช้าๆ อีกครั้ง";
+  return "ระบบจับเสียงได้ไม่ตรงกับคำเป้าหมาย ลองพูดให้ชัดและใกล้ไมค์มากขึ้น";
+}
+
+function toggleRecording() {
   if (isRecording) {
-    mediaRecorder?.stop();
+    speechRecognizer?.stop();
     return;
   }
 
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
   const statusEl = document.getElementById("record-status");
   const recordBtn = document.getElementById("record-btn");
   const resultEl = document.getElementById("score-result");
   if (resultEl) resultEl.hidden = true;
 
-  let stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch (err) {
+  if (!SpeechRecognitionCtor) {
     if (statusEl)
-      statusEl.textContent = "❌ ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตการใช้งานไมค์";
+      statusEl.textContent = "❌ เบราว์เซอร์นี้ไม่รองรับการถอดเสียง กรุณาใช้ Chrome หรือ Edge";
     return;
   }
 
-  recordedChunks = [];
-  mediaRecorder = new MediaRecorder(stream);
-
-  mediaRecorder.addEventListener("dataavailable", (e) => {
-    if (e.data.size > 0) recordedChunks.push(e.data);
-  });
-
-  mediaRecorder.addEventListener("stop", () => {
-    stream.getTracks().forEach((track) => track.stop());
-    isRecording = false;
-    if (recordBtn) {
-      recordBtn.textContent = "🎙️ เริ่มอัดเสียง";
-      recordBtn.classList.remove("recording");
-    }
-    const blob = new Blob(recordedChunks, {
-      type: mediaRecorder.mimeType || "audio/webm",
-    });
-    submitRecordingForScoring(blob);
-  });
-
-  mediaRecorder.start();
-  isRecording = true;
-  if (recordBtn) {
-    recordBtn.textContent = "⏹ หยุดอัดเสียง";
-    recordBtn.classList.add("recording");
-  }
-  if (statusEl) statusEl.textContent = "🔴 กำลังอัดเสียง พูดคำศัพท์ให้ชัดเจน...";
-}
-
-async function submitRecordingForScoring(blob) {
   const words =
     typeof VOCABULARY !== "undefined" && VOCABULARY[state.hsk]
       ? VOCABULARY[state.hsk]
       : [];
   const targetWord = words[listenIndex];
-  const statusEl = document.getElementById("record-status");
   if (!targetWord) return;
 
-  if (statusEl) statusEl.textContent = "⏳ กำลังส่งเสียงให้ AI วิเคราะห์...";
+  speechRecognizer = new SpeechRecognitionCtor();
+  speechRecognizer.lang = "zh-CN";
+  speechRecognizer.continuous = false;
+  speechRecognizer.interimResults = false;
+  speechRecognizer.maxAlternatives = 1;
 
-  const formData = new FormData();
-  formData.append("audio", blob, "recording.webm");
-  formData.append("zh", targetWord.zh);
-  formData.append("py", targetWord.py);
-  formData.append("th", targetWord.th);
+  let handled = false;
 
-  try {
-    const res = await fetch(`${PRONUNCIATION_API_BASE}/api/pronunciation-score`, {
-      method: "POST",
-      body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "เกิดข้อผิดพลาด");
-
+  speechRecognizer.addEventListener("result", (e) => {
+    handled = true;
+    const heardText = e.results[0][0].transcript.trim();
+    const score = scorePronunciation(heardText, targetWord.zh);
+    renderScoreResult({ score, heard: heardText, feedback: feedbackForScore(score) });
     if (statusEl) statusEl.textContent = "";
-    renderScoreResult(data);
-  } catch (err) {
-    if (statusEl)
-      statusEl.textContent = `❌ ${err.message || "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์วิเคราะห์เสียงได้"}`;
+  });
+
+  speechRecognizer.addEventListener("error", (e) => {
+    handled = true;
+    if (statusEl) {
+      statusEl.textContent =
+        e.error === "not-allowed" || e.error === "permission-denied"
+          ? "❌ ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตการใช้งานไมค์"
+          : e.error === "no-speech"
+            ? "❌ ไม่ได้ยินเสียงพูด กรุณาลองใหม่และพูดให้ชัดเจน"
+            : "❌ ไม่สามารถถอดเสียงได้ กรุณาลองใหม่";
+    }
+  });
+
+  speechRecognizer.addEventListener("end", () => {
+    isRecording = false;
+    if (recordBtn) {
+      recordBtn.textContent = "🎙️ เริ่มอัดเสียง";
+      recordBtn.classList.remove("recording");
+    }
+    if (!handled && statusEl) {
+      statusEl.textContent = "❌ ไม่ได้ยินเสียงพูด กรุณาลองใหม่และพูดให้ชัดเจน";
+    }
+  });
+
+  speechRecognizer.start();
+  isRecording = true;
+  if (recordBtn) {
+    recordBtn.textContent = "⏹ หยุดอัดเสียง";
+    recordBtn.classList.add("recording");
   }
+  if (statusEl) statusEl.textContent = "🔴 กำลังฟัง พูดคำศัพท์ให้ชัดเจน...";
 }
 
 function renderScoreResult(data) {
@@ -1253,7 +1363,7 @@ function renderScoreResult(data) {
   else resultEl.classList.add("score-low");
 
   if (numEl) numEl.textContent = `${data.score}`;
-  if (heardEl) heardEl.textContent = data.heard ? `AI ได้ยินว่า: ${data.heard}` : "";
+  if (heardEl) heardEl.textContent = data.heard ? `ระบบได้ยินว่า: ${data.heard}` : "";
   if (feedbackEl) feedbackEl.textContent = data.feedback || "";
 }
 

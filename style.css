@@ -869,6 +869,18 @@ body {
   animation: scoreBump 0.5s ease;
 }
 
+/* ป้ายคอมโบตอบถูกติดกัน */
+.combo-badge {
+  font-family: "Kanit", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--gold);
+  background: rgba(217, 168, 87, 0.15);
+  border-radius: 999px;
+  padding: 2px 8px;
+  animation: popIn 0.4s ease;
+}
+
 /* การ์ดคำถาม */
 .question-card {
   background: var(--paper);
