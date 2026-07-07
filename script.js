@@ -1139,7 +1139,12 @@ function nextListen() {
 /* ============================================================
    11) อัดเสียงผู้เรียนแล้วส่งให้ AI (OpenAI Whisper + GPT) ให้คะแนนความถูกต้อง
 ============================================================ */
-const PRONUNCIATION_API_BASE = "http://localhost:3001";
+// ตอนรันในเครื่อง (localhost) จะยิงไป backend เครื่องเดียวกันอัตโนมัติ
+// ส่วนตอน deploy ขึ้นจริง ให้แก้ URL ด้านล่างเป็นลิงก์ backend ที่ deploy ไว้ (เช่น Render)
+const PRONUNCIATION_API_BASE =
+  location.hostname === "localhost" || location.hostname === "127.0.0.1"
+    ? "http://localhost:3001"
+    : "https://your-backend-service.onrender.com"; // TODO: แก้เป็น URL จริงหลัง deploy backend
 
 let mediaRecorder = null;
 let recordedChunks = [];

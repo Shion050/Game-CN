@@ -29,7 +29,9 @@ const openai = process.env.OPENAI_API_KEY
   : null;
 
 const app = express();
-app.use(cors());
+// ถ้าตั้งค่า ALLOWED_ORIGIN ไว้ (URL หน้าเว็บที่ deploy จริง) จะอนุญาตเฉพาะโดเมนนั้น
+// ถ้าไม่ตั้งค่า จะอนุญาตทุกโดเมน (สะดวกตอนพัฒนา/ทดสอบกับเพื่อนกลุ่มเล็ก)
+app.use(cors(process.env.ALLOWED_ORIGIN ? { origin: process.env.ALLOWED_ORIGIN } : {}));
 
 app.post("/api/pronunciation-score", upload.single("audio"), async (req, res) => {
   try {
