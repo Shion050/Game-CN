@@ -40,13 +40,23 @@ html {
 
 body {
   font-family: "Sarabun", sans-serif;
-  background:
-    url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'140'%20height%3D'140'%3E%3Cg%20fill%3D'none'%20stroke%3D'%23d9a857'%20stroke-width%3D'1.4'%20opacity%3D'0.5'%3E%3Cpath%20d%3D'M10%2030%20Q20%2018%2032%2026%20Q40%2016%2052%2026%20Q58%2018%2068%2028'%2F%3E%3Cpath%20d%3D'M80%2090%20Q90%2078%20102%2086%20Q110%2076%20122%2086%20Q128%2078%20138%2088'%2F%3E%3Ccircle%20cx%3D'20'%20cy%3D'100'%20r%3D'2'%2F%3E%3Ccircle%20cx%3D'115'%20cy%3D'20'%20r%3D'2'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"),
-    radial-gradient(circle at 50% -10%, #322b27 0%, var(--ink) 55%);
+  background-image:
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'120'%20height%3D'120'%3E%3Cg%20opacity%3D'0.55'%3E%3Crect%20x%3D'22'%20y%3D'34'%20width%3D'18'%20height%3D'24'%20rx%3D'9'%20fill%3D'%23c1382d'%20stroke%3D'%23d9a857'%20stroke-width%3D'1.6'%2F%3E%3Crect%20x%3D'27'%20y%3D'27'%20width%3D'8'%20height%3D'5'%20rx%3D'1'%20fill%3D'%23d9a857'%2F%3E%3Crect%20x%3D'27'%20y%3D'58'%20width%3D'8'%20height%3D'4'%20rx%3D'1'%20fill%3D'%23d9a857'%2F%3E%3Cline%20x1%3D'31'%20y1%3D'62'%20x2%3D'31'%20y2%3D'72'%20stroke%3D'%23d9a857'%20stroke-width%3D'1.4'%2F%3E%3Crect%20x%3D'74'%20y%3D'72'%20width%3D'13'%20height%3D'17'%20rx%3D'6.5'%20fill%3D'%23c1382d'%20stroke%3D'%23d9a857'%20stroke-width%3D'1.2'%2F%3E%3Crect%20x%3D'77.5'%20y%3D'67'%20width%3D'6'%20height%3D'4'%20rx%3D'1'%20fill%3D'%23d9a857'%2F%3E%3Crect%20x%3D'77.5'%20y%3D'89'%20width%3D'6'%20height%3D'3'%20rx%3D'1'%20fill%3D'%23d9a857'%2F%3E%3Cline%20x1%3D'80.5'%20y1%3D'92'%20x2%3D'80.5'%20y2%3D'100'%20stroke%3D'%23d9a857'%20stroke-width%3D'1.1'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"),
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20800%20220'%20preserveAspectRatio%3D'none'%3E%3Cpath%20d%3D'M0%20220%20L0%20150%20Q60%2095%20130%20135%20T260%20110%20T390%20140%20T520%2095%20T650%20130%20T780%20105%20L800%20112%20L800%20220%20Z'%20fill%3D'%232a0f0d'%20opacity%3D'0.6'%2F%3E%3Cpath%20d%3D'M0%20220%20L0%20178%20Q90%20135%20180%20165%20T360%20150%20T540%20168%20T720%20145%20L800%20155%20L800%20220%20Z'%20fill%3D'%23170908'%20opacity%3D'0.85'%2F%3E%3C%2Fsvg%3E"),
+    radial-gradient(ellipse 75% 42% at 50% -6%, rgba(217, 90, 70, 0.4), rgba(193, 56, 45, 0) 72%),
+    radial-gradient(circle at 50% -10%, #5a1a16 0%, #2b0f0d 45%, #170a09 100%);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-position:
+    0 0,
+    bottom center,
+    center top,
+    center;
   background-size:
-    140px 140px,
+    120px 120px,
+    100% 240px,
+    auto,
     auto;
-  background-attachment: fixed;
+  background-attachment: fixed, fixed, fixed, fixed;
   color: var(--text-on-ink);
   min-height: 100vh;
   display: flex;
@@ -66,9 +76,7 @@ body {
 /* พื้นผิวเนื้อกระดาษหยาบแบบจีนโบราณ ทาบทับบนพื้นผิวกระดาษทุกจุด */
 .level-card,
 .question-card,
-.setup-card,
 .result-card,
-.team-card,
 .vocab-card,
 .leaderboard li {
   position: relative;
@@ -76,9 +84,7 @@ body {
 }
 .level-card::after,
 .question-card::after,
-.setup-card::after,
 .result-card::after,
-.team-card::after,
 .vocab-card::after,
 .leaderboard li::after {
   content: "";
@@ -96,8 +102,100 @@ body {
    #app : คอนเทนเนอร์หลักของ SPA (จำกัดความกว้างสำหรับ responsive)
 ============================================================ */
 .app {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 720px;
+}
+
+/* ============================================================
+   ✨ ตัวอักษรมงคลลอยละล่องเป็นพื้นหลัง (福 โชคลาภ / 喜 ยินดี / 財 ทรัพย์ / 寿 อายุยืน)
+============================================================ */
+.ambient-glyphs {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.ambient-glyphs span {
+  position: absolute;
+  top: -14vh;
+  font-family: "Noto Serif SC", serif;
+  font-weight: 900;
+  color: var(--gold);
+  opacity: 0;
+  text-shadow: 0 0 16px rgba(217, 168, 87, 0.35);
+  animation: glyphDrift linear infinite;
+  will-change: transform, opacity;
+}
+.ambient-glyphs span:nth-child(1) {
+  left: 6%;
+  font-size: 46px;
+  animation-duration: 26s;
+  animation-delay: 0s;
+}
+.ambient-glyphs span:nth-child(2) {
+  left: 86%;
+  font-size: 32px;
+  animation-duration: 22s;
+  animation-delay: 4s;
+  color: var(--seal);
+}
+.ambient-glyphs span:nth-child(3) {
+  left: 32%;
+  font-size: 28px;
+  animation-duration: 30s;
+  animation-delay: 9s;
+}
+.ambient-glyphs span:nth-child(4) {
+  left: 68%;
+  font-size: 54px;
+  animation-duration: 24s;
+  animation-delay: 2s;
+  color: var(--seal);
+}
+.ambient-glyphs span:nth-child(5) {
+  left: 48%;
+  font-size: 24px;
+  animation-duration: 28s;
+  animation-delay: 13s;
+}
+.ambient-glyphs span:nth-child(6) {
+  left: 14%;
+  font-size: 36px;
+  animation-duration: 20s;
+  animation-delay: 16s;
+  color: var(--seal);
+}
+@keyframes glyphDrift {
+  0% {
+    transform: translateY(0) rotate(-6deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(60vh) rotate(4deg);
+    opacity: 0.4;
+  }
+  92% {
+    opacity: 0.24;
+  }
+  100% {
+    transform: translateY(122vh) rotate(-4deg);
+    opacity: 0;
+  }
+}
+@media (max-width: 480px) {
+  .ambient-glyphs span {
+    display: none;
+  }
+  .ambient-glyphs span:nth-child(1),
+  .ambient-glyphs span:nth-child(4) {
+    display: block;
+  }
 }
 
 /* ---------- ระบบสลับหน้าจอ (Screen / SPA) ---------- */
@@ -422,205 +520,6 @@ body {
 }
 
 /* ============================================================
-   SECTION 3 : Group Setup (ฟอร์มกรอกข้อมูลผู้เล่น)
-============================================================ */
-.setup-card {
-  background: var(--paper);
-  color: var(--text-on-paper);
-  border-radius: var(--radius-lg);
-  padding: 22px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-  overflow: hidden;
-}
-/* ลายน้ำอักษรจีน "组" (กลุ่ม/ทีม) มุมขวาบน ให้เข้าธีมเดียวกับการ์ดอื่นๆ */
-.setup-card::before {
-  content: "组";
-  font-family: "Noto Serif SC", serif;
-  font-weight: 900;
-  position: absolute;
-  top: -28px;
-  right: -8px;
-  font-size: 110px;
-  color: rgba(193, 56, 45, 0.06);
-  pointer-events: none;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  position: relative;
-}
-.form-group > label {
-  font-family: "Kanit", sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.input-row {
-  display: flex;
-  gap: 10px;
-}
-
-.number-input,
-.select-input,
-.text-input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: var(--paper-soft);
-  color: var(--text-on-paper);
-  font-family: "Sarabun", sans-serif;
-  font-size: 14px;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-.number-input:focus,
-.select-input:focus,
-.text-input:focus {
-  outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(217, 168, 87, 0.2);
-}
-.number-input {
-  max-width: 70px;
-  text-align: center;
-  -moz-appearance: textfield;
-}
-.number-input::-webkit-outer-spin-button,
-.number-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.text-input::placeholder {
-  color: #b0a498;
-}
-
-/* ปุ่ม +/- ปรับจำนวนผู้เล่นแบบสเต็ปเปอร์ */
-.stepper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.stepper-btn {
-  flex-shrink: 0;
-  width: 38px;
-  height: 44px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: var(--radius-sm);
-  background: var(--paper-soft);
-  color: var(--seal);
-  font-family: "Kanit", sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    transform 0.1s ease;
-}
-.stepper-btn:hover {
-  background: rgba(193, 56, 45, 0.1);
-}
-.stepper-btn:active {
-  transform: scale(0.92);
-}
-
-/* รายการช่องกรอกชื่อผู้เล่น */
-.player-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.player-list-item {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  animation: cardIn 0.3s ease backwards;
-}
-.player-list-item .text-input {
-  flex: 1;
-}
-.player-avatar {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: "Kanit", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-.remove-player-btn {
-  flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: rgba(193, 56, 45, 0.12);
-  color: var(--seal);
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-.remove-player-btn:hover {
-  background: rgba(193, 56, 45, 0.2);
-}
-
-/* ชิปปุ่มเลือกจำนวนทีม แทนดรอปดาวน์ */
-.team-count-picker {
-  display: flex;
-  gap: 10px;
-}
-.team-count-chip {
-  flex: 1;
-  padding: 12px 10px;
-  border-radius: var(--radius-sm);
-  border: 2px solid rgba(0, 0, 0, 0.12);
-  background: var(--paper-soft);
-  color: var(--text-on-paper);
-  font-family: "Kanit", sans-serif;
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease,
-    transform 0.15s ease;
-}
-.team-count-chip span {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
-}
-.team-count-chip:hover {
-  border-color: var(--gold);
-}
-.team-count-chip.active {
-  border-color: var(--seal);
-  background: rgba(193, 56, 45, 0.1);
-  color: var(--seal);
-  transform: translateY(-2px);
-}
-.team-count-chip.active span {
-  color: var(--seal);
-}
-
-.form-note {
-  font-size: 13px;
-  color: var(--seal);
-  min-height: 18px;
-}
-
-/* ============================================================
    ปุ่มทั่วไป (ใช้ซ้ำได้ทุกหน้า)
 ============================================================ */
 .btn {
@@ -683,75 +582,8 @@ body {
   background: rgba(0, 0, 0, 0.05);
 }
 
-.btn-add {
-  align-self: flex-start;
-}
-
 /* ============================================================
-   SECTION 4 : ผลการสุ่มทีม
-============================================================ */
-.team-grid {
-  display: grid;
-  gap: 14px;
-  margin-bottom: 22px;
-}
-
-@media (min-width: 520px) {
-  .team-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.team-card {
-  background: var(--paper);
-  color: var(--text-on-paper);
-  border-radius: var(--radius-md);
-  padding: 16px 18px;
-  position: relative;
-  overflow: hidden;
-}
-.team-card::before {
-  content: "队";
-  font-family: "Noto Serif SC", serif;
-  font-weight: 900;
-  position: absolute;
-  top: -22px;
-  right: -6px;
-  font-size: 80px;
-  color: rgba(193, 56, 45, 0.06);
-}
-.team-card h3 {
-  font-family: "Kanit", sans-serif;
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.team-card .team-color-dot {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.team-card ul {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.team-card li {
-  font-size: 13.5px;
-  background: var(--paper-soft);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  position: relative;
-}
-
-/* ============================================================
-   ปุ่ม คลังคำศัพท์ + ฟังแล้วพูดตาม (หน้าหลัก)
+   ปุ่ม คลังคำศัพท์ + ฟังแล้วพูดตาม (หน้าเลือกเกมย่อย)
 ============================================================ */
 .extra-menu {
   display: flex;
@@ -786,6 +618,19 @@ body {
 
 .extra-menu .btn:active {
   transform: translateY(1px);
+}
+
+/* ============================================================
+   หน้าเริ่มต้น (Splash) : ปุ่มกดเล่นตัวใหญ่เรียกความสนใจด้วยแสงเรืองจังหวะ
+============================================================ */
+#screen-start {
+  text-align: center;
+}
+.start-play-btn {
+  margin-top: 8px;
+  font-size: 20px;
+  padding: 18px 24px;
+  animation: pulseBtn 2.2s infinite;
 }
 
 /* ============================================================
@@ -1320,6 +1165,37 @@ body {
   margin-top: 24px;
 }
 
+/* ปุ่มไอคอนลำโพงสำหรับฟังเสียงเจ้าของภาษาจีน */
+.audio-btn {
+  font-family: "Sarabun", sans-serif;
+  cursor: pointer;
+  border: 1px solid rgba(217, 168, 87, 0.4);
+  background: var(--paper);
+  color: var(--seal);
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+.audio-btn:hover {
+  background: rgba(193, 56, 45, 0.08);
+  transform: scale(1.05);
+}
+.audio-btn:active {
+  transform: scale(0.95);
+}
+
+.audio-btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  position: relative;
+}
+
 /* ============================================================
    🎨 ตกแต่งพื้นที่แสดงรายการคลังคำศัพท์ (Vocabulary Grid)
 ============================================================ */
@@ -1350,25 +1226,6 @@ body {
   box-shadow: 0 10px 24px rgba(193, 56, 45, 0.08);
 }
 
-/* ปุ่มไอคอนลำโพงสำหรับฟังเสียงเจ้าของภาษาจีน */
-.audio-btn {
-  font-family: "Sarabun", sans-serif;
-  cursor: pointer;
-  border: 1px solid rgba(217, 168, 87, 0.4);
-  background: var(--paper);
-  color: var(--seal);
-  transition:
-    background 0.15s ease,
-    transform 0.15s ease;
-}
-.audio-btn:hover {
-  background: rgba(193, 56, 45, 0.08);
-  transform: scale(1.05);
-}
-.audio-btn:active {
-  transform: scale(0.95);
-}
-
 .vocab-card .audio-btn {
   position: absolute;
   top: 14px;
@@ -1383,18 +1240,6 @@ body {
   justify-content: center;
   padding: 0;
   z-index: 1;
-}
-
-.audio-btn-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 14px;
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
-  position: relative;
 }
 
 .vocab-card h3 {
@@ -1488,6 +1333,90 @@ body {
 }
 
 /* ============================================================
+   หน้าฝึกพูด: แผงอัดเสียงและผลคะแนนจาก AI
+============================================================ */
+.record-panel {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+}
+
+.record-btn {
+  background: var(--jade);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.record-btn:hover {
+  filter: brightness(1.08);
+}
+.record-btn.recording {
+  background: var(--seal);
+  animation: record-pulse 1.4s ease-in-out infinite;
+}
+@keyframes record-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(193, 56, 45, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(193, 56, 45, 0);
+  }
+}
+
+.record-status {
+  font-family: "Sarabun", sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  min-height: 20px;
+}
+
+.score-result {
+  margin-top: 16px;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: var(--paper-soft);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.score-result-num {
+  font-family: "Kanit", sans-serif;
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+}
+.score-result-num::after {
+  content: " / 100";
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.score-result.score-good .score-result-num {
+  color: var(--jade);
+}
+.score-result.score-mid .score-result-num {
+  color: var(--gold);
+}
+.score-result.score-low .score-result-num {
+  color: var(--seal);
+}
+
+.score-result-heard {
+  font-family: "Noto Serif SC", serif;
+  font-size: 17px;
+  color: var(--text-on-paper);
+  margin-top: 8px;
+}
+
+.score-result-feedback {
+  font-family: "Sarabun", sans-serif;
+  font-size: 14.5px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* ============================================================
    Responsive: ปรับสำหรับหน้าจอเล็ก (Mobile Viewポート)
 ============================================================ */
 @media (max-width: 420px) {
@@ -1496,28 +1425,6 @@ body {
   }
   .result-stat-row {
     font-size: 13px;
-  }
-  .input-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .number-input {
-    max-width: 100%;
-  }
-
-  #subgame-context {
-    font-family: "Kanit", sans-serif;
-    font-size: 32px;
-    font-weight: 800;
-    color: #fff;
-    text-align: center;
-    margin-top: 10px;
-    margin-bottom: 22px;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
-  }
-  #subgame-context .highlight-hsk {
-    color: #ffd700;
-    font-weight: 900;
   }
 
   /* ปุ่มเมนูพิเศษบนมือถือ */
@@ -1625,77 +1532,44 @@ body {
 }
 
 /* ============================================================
-   🏮 โคมไฟแดงแขวนสองข้างของหัวข้อหลัก (หน้าเลือก HSK)
+   🐉 หัวมังกรจีนแขวนโยกสองข้างของหัวข้อหลัก (หน้าเริ่มต้น/หน้าเลือก HSK)
 ============================================================ */
-.lantern {
+.dragon-deco {
   position: absolute;
-  top: -18px;
-  width: 34px;
+  top: -10px;
+  width: 68px;
   z-index: 2;
-  animation: lanternSway 3.6s ease-in-out infinite;
+  animation: dragonSway 3.6s ease-in-out infinite;
   transform-origin: top center;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
 }
-.lantern-left {
+.dragon-deco img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.dragon-left {
   left: 4%;
 }
-.lantern-right {
+.dragon-right {
   right: 4%;
   animation-delay: 0.6s;
 }
-.lantern .string {
-  display: block;
-  width: 1px;
-  height: 12px;
-  background: rgba(217, 168, 87, 0.6);
-  margin: 0 auto;
-}
-.lantern .lantern-body {
-  display: block;
-  width: 34px;
-  height: 40px;
-  margin: 0 auto;
-  border-radius: 16px;
-  background: radial-gradient(circle at 35% 30%, #e2564a, var(--seal) 75%);
-  border: 1px solid rgba(217, 168, 87, 0.7);
-  box-shadow:
-    inset 0 0 0 2px rgba(0, 0, 0, 0.12),
-    0 4px 10px rgba(0, 0, 0, 0.35);
-  position: relative;
-}
-.lantern .lantern-body::before {
-  content: "";
-  position: absolute;
-  inset: 4px 8px;
-  border-left: 1px solid rgba(217, 168, 87, 0.5);
-  border-right: 1px solid rgba(217, 168, 87, 0.5);
-}
-.lantern .cap {
-  display: block;
-  width: 14px;
-  height: 4px;
-  margin: 0 auto;
-  background: var(--gold);
-  border-radius: 2px;
-}
-.lantern .tassel {
-  display: block;
-  width: 2px;
-  height: 14px;
-  margin: 0 auto;
-  background: var(--gold);
+.dragon-right img {
+  transform: scaleX(-1);
 }
 @media (max-width: 480px) {
-  .lantern {
+  .dragon-deco {
     display: none;
   }
 }
-@keyframes lanternSway {
+@keyframes dragonSway {
   0%,
   100% {
-    transform: rotate(-4deg);
+    transform: rotate(-6deg);
   }
   50% {
-    transform: rotate(4deg);
+    transform: rotate(6deg);
   }
 }
 
@@ -1769,90 +1643,6 @@ body {
 .result-card > * {
   position: relative;
   z-index: 1;
-}
-
-/* ============================================================
-   หน้าฝึกพูด: แผงอัดเสียงและผลคะแนนจาก AI
-============================================================ */
-.record-panel {
-  margin-top: 26px;
-  padding-top: 22px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.12);
-}
-
-.record-btn {
-  background: var(--jade);
-  color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-.record-btn:hover {
-  filter: brightness(1.08);
-}
-.record-btn.recording {
-  background: var(--seal);
-  animation: record-pulse 1.4s ease-in-out infinite;
-}
-@keyframes record-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(193, 56, 45, 0.45);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(193, 56, 45, 0);
-  }
-}
-
-.record-status {
-  font-family: "Sarabun", sans-serif;
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-top: 12px;
-  min-height: 20px;
-}
-
-.score-result {
-  margin-top: 16px;
-  padding: 20px;
-  border-radius: var(--radius-md);
-  background: var(--paper-soft);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.score-result-num {
-  font-family: "Kanit", sans-serif;
-  font-weight: 800;
-  font-size: 44px;
-  line-height: 1;
-}
-.score-result-num::after {
-  content: " / 100";
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.score-result.score-good .score-result-num {
-  color: var(--jade);
-}
-.score-result.score-mid .score-result-num {
-  color: var(--gold);
-}
-.score-result.score-low .score-result-num {
-  color: var(--seal);
-}
-
-.score-result-heard {
-  font-family: "Noto Serif SC", serif;
-  font-size: 17px;
-  color: var(--text-on-paper);
-  margin-top: 8px;
-}
-
-.score-result-feedback {
-  font-family: "Sarabun", sans-serif;
-  font-size: 14.5px;
-  color: var(--text-muted);
-  margin-top: 8px;
 }
 
 /* ============================================================
@@ -1942,3 +1732,4 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+

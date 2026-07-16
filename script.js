@@ -5,9 +5,8 @@
 // สถานะการควบคุมระบบเกม
 const state = {
   hsk: "hsk1", // ระดับ HSK ที่เลือก (hsk1, hsk2, hsk3, hsk4, hsk5)
-  mode: "solo", // solo หรือ group
-  teams: [], // ข้อมูลทีม/ผู้เล่น [{ name, score, correct, combo }]
-  currentTeamIdx: 0, // ทีมที่กำลังเล่นรอบนี้
+  teams: [], // ข้อมูลผู้เล่น [{ name, score, correct, combo }]
+  currentTeamIdx: 0,
   gameType: "quiz", // ประเภทเกมย่อย (quiz, guess, fill, memory)
   questions: [], // รายการโจทย์คำถามที่ถูกสุ่มเจเนอเรตขึ้นมาในรอบนั้นๆ
   currentQIdx: 0, // ดัชนีข้อปัจจุบัน
@@ -77,7 +76,7 @@ function fireBigConfetti() {
   fireConfetti({ particleCount: 140, spread: 100, startVelocity: 45 });
 }
 
-// ตัดสินผลตอบถูก/ผิดของทีม แล้วอัปเดตคอมโบ + เสียง + คอนเฟตตี้ให้สอดคล้องกัน
+// ตัดสินผลตอบถูก/ผิด แล้วอัปเดตคอมโบ + เสียง + คอนเฟตตี้ให้สอดคล้องกัน
 function registerAnswerResult(team, isCorrect) {
   if (isCorrect) {
     team.combo = (team.combo || 0) + 1;
@@ -260,16 +259,14 @@ function generateDynamicQuestions(hskLevel, gameType, count = 10) {
    3) ระบบควบคุมหน้าจอและการนำทาง (SPA Screen Switching)
 ============================================================ */
 const screens = {
+  start: document.getElementById("screen-start"),
   hsk: document.getElementById("screen-hsk"),
-  mode: document.getElementById("screen-mode"),
-  "group-setup": document.getElementById("screen-group-setup"),
-  "team-result": document.getElementById("screen-team-result"),
   subgame: document.getElementById("screen-subgame"),
   vocabulary: document.getElementById("screen-vocabulary"),
   listen: document.getElementById("screen-listen"),
+  "memory-difficulty": document.getElementById("screen-memory-difficulty"),
   game: document.getElementById("screen-game"),
   memory: document.getElementById("screen-memory"),
-  "memory-difficulty": document.getElementById("screen-memory-difficulty"),
   leaderboard: document.getElementById("screen-leaderboard"),
   result: document.getElementById("screen-result"),
 };
@@ -296,173 +293,18 @@ document.querySelectorAll(".back-btn").forEach((btn) => {
 });
 
 /* ============================================================
-   4) หน้าเลือกระดับ HSK -> ลิงก์เข้าสู่หน้าเลือกโหมดเดี่ยว/กลุ่มทันที
+   4) หน้าเลือกระดับ HSK -> เลือกเสร็จไปหน้าเลือกเกมย่อยทันที
 ============================================================ */
 document.querySelectorAll("#hsk-grid .level-card").forEach((card) => {
   card.addEventListener("click", () => {
     state.hsk = card.getAttribute("data-hsk");
-    showScreen("mode");
+    state.teams = [{ name: "ผู้เล่นเดี่ยว", score: 0, correct: 0, combo: 0 }];
+    goToSubgameScreen();
   });
 });
 
 /* ============================================================
-   5) หน้าเลือกโหมดผู้เล่น (Solo / Group Random)
-============================================================ */
-document.querySelectorAll("#mode-grid .level-card").forEach((card) => {
-  card.addEventListener("click", () => {
-    state.mode = card.getAttribute("data-mode");
-    if (state.mode === "solo") {
-      state.teams = [{ name: "ผู้เล่นเดี่ยว", score: 0, correct: 0, combo: 0 }];
-      goToSubgameScreen();
-    } else {
-      showScreen("group-setup");
-    }
-  });
-});
-
-/* ============================================================
-   6) การตั้งค่าสุ่มจัดทีม (Group Team Generator)
-============================================================ */
-function initGroupSetup() {
-  const applyBtn = document.getElementById("apply-player-count");
-  if (applyBtn) applyBtn.addEventListener("click", generatePlayerInputs);
-
-  const form = document.getElementById("group-setup-form");
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      handleRandomizeGroups();
-    });
-  }
-  generatePlayerInputs();
-}
-
-// สีอวาตาร์ไล่วนตามลำดับผู้เล่น ให้แต่ละแถวดูมีชีวิตชีวาแตกต่างกัน
-const PLAYER_AVATAR_COLORS = ["var(--seal)", "var(--gold)", "var(--jade)"];
-
-function playerRowHtml(i) {
-  const color = PLAYER_AVATAR_COLORS[(i - 1) % PLAYER_AVATAR_COLORS.length];
-  return `
-    <div class="player-list-item">
-      <span class="player-avatar" style="background:${color};">${i}</span>
-      <input type="text" class="text-input player-name-field" value="ผู้เล่น ${i}" placeholder="ระบุชื่อผู้เล่น" />
-      <button type="button" class="remove-player-btn" aria-label="ลบผู้เล่นแถวนี้">✕</button>
-    </div>
-  `;
-}
-
-function generatePlayerInputs() {
-  const count = parseInt(document.getElementById("player-count").value) || 4;
-  const listContainer = document.getElementById("player-name-list");
-  if (!listContainer) return;
-  listContainer.innerHTML = "";
-  for (let i = 1; i <= count; i++) {
-    listContainer.innerHTML += playerRowHtml(i);
-  }
-}
-
-document.getElementById("add-player-btn")?.addEventListener("click", () => {
-  const inputContainer = document.getElementById("player-name-list");
-  if (!inputContainer) return;
-  const currentCount = inputContainer.children.length;
-  if (currentCount >= 20) return;
-  const i = currentCount + 1;
-  const div = document.createElement("div");
-  div.innerHTML = playerRowHtml(i).trim();
-  inputContainer.appendChild(div.firstElementChild);
-  document.getElementById("player-count").value = i;
-});
-
-// ลบแถวรายชื่อผู้เล่น (ต้องเหลืออย่างน้อย 2 คนตามขั้นต่ำของช่องจำนวนผู้เล่น)
-document.getElementById("player-name-list")?.addEventListener("click", (e) => {
-  if (!e.target.classList.contains("remove-player-btn")) return;
-  const listContainer = document.getElementById("player-name-list");
-  if (listContainer.children.length <= 2) return;
-  e.target.closest(".player-list-item")?.remove();
-  document.getElementById("player-count").value = listContainer.children.length;
-});
-
-// ปุ่ม +/- ปรับจำนวนผู้เล่นแบบรวดเร็ว แล้วอัปเดตช่องชื่อทันที
-document.getElementById("player-count-minus")?.addEventListener("click", () => {
-  const input = document.getElementById("player-count");
-  const val = Math.max(2, (parseInt(input.value) || 2) - 1);
-  input.value = val;
-  generatePlayerInputs();
-});
-document.getElementById("player-count-plus")?.addEventListener("click", () => {
-  const input = document.getElementById("player-count");
-  const val = Math.min(20, (parseInt(input.value) || 2) + 1);
-  input.value = val;
-  generatePlayerInputs();
-});
-
-// เลือกจำนวนทีมแบบชิปปุ่ม แทนดรอปดาวน์เดิม
-document.getElementById("team-count-picker")?.addEventListener("click", (e) => {
-  const chip = e.target.closest(".team-count-chip");
-  if (!chip) return;
-  document
-    .querySelectorAll("#team-count-picker .team-count-chip")
-    .forEach((c) => c.classList.remove("active"));
-  chip.classList.add("active");
-  document.getElementById("team-count").value = chip.getAttribute("data-count");
-});
-
-function handleRandomizeGroups() {
-  const fields = document.querySelectorAll(".player-name-field");
-  const names = Array.from(fields)
-    .map((f) => f.value.trim())
-    .filter((v) => v !== "");
-  const teamCount = parseInt(document.getElementById("team-count").value);
-  const errorEl = document.getElementById("group-setup-error");
-
-  if (names.length < teamCount) {
-    if (errorEl)
-      errorEl.textContent = `❌ จำนวนผู้เล่นต้องไม่ต่ำกว่าจํานวนทีม (${teamCount} ทีม)`;
-    return;
-  }
-  if (errorEl) errorEl.textContent = "";
-
-  names.sort(() => Math.random() - 0.5);
-
-  const tempTeams = [];
-  for (let t = 0; t < teamCount; t++) {
-    tempTeams.push({
-      name: `🔥 ทีมที่ ${t + 1}`,
-      members: [],
-      score: 0,
-      correct: 0,
-      combo: 0,
-    });
-  }
-  names.forEach((name, idx) => {
-    tempTeams[idx % teamCount].members.push(name);
-  });
-
-  state.teams = tempTeams;
-
-  const grid = document.getElementById("team-result-grid");
-  if (grid) {
-    grid.innerHTML = state.teams
-      .map(
-        (team) => `
-      <div class="team-card">
-        <h3>🎯 ${team.name}</h3>
-        <ul>${team.members.map((m) => `<li>👤 ${m}</li>`).join("")}</ul>
-      </div>
-    `,
-      )
-      .join("");
-  }
-
-  showScreen("team-result");
-}
-
-document.getElementById("confirm-teams-btn")?.addEventListener("click", () => {
-  goToSubgameScreen();
-});
-
-/* ============================================================
-   7) หน้าเลือกเกมย่อยที่หลากหลาย (Subgame Grid View)
+   5) หน้าเลือกเกมย่อยที่หลากหลาย (Subgame Grid View)
 ============================================================ */
 function goToSubgameScreen() {
   const levelName = state.hsk.toUpperCase();
@@ -470,8 +312,7 @@ function goToSubgameScreen() {
   if (heading) heading.textContent = `เลือกรูปแบบเกมย่อย (${levelName})`;
 
   const context = document.getElementById("subgame-context");
-  if (context)
-    context.innerHTML = `โหมดการเล่น: <span class="highlight-hsk">${state.mode === "solo" ? "เล่นคนเดียว" : "แข่งขันเป็นกลุ่ม"}</span>`;
+  if (context) context.textContent = "โหมดการเล่น: เล่นคนเดียว";
 
   const grid = document.getElementById("subgame-grid");
   if (!grid) return;
@@ -496,20 +337,11 @@ function goToSubgameScreen() {
     grid.appendChild(card);
   });
 
-  const backBtn = document.getElementById("subgame-back-btn");
-  if (backBtn) {
-    if (state.mode === "solo") {
-      backBtn.setAttribute("data-back", "screen-mode");
-    } else {
-      backBtn.setAttribute("data-back", "screen-team-result");
-    }
-  }
-
   showScreen("subgame");
 }
 
 /* ============================================================
-   8) เปิดฉากเริ่มต้นด่านย่อยและทำการสุ่มสลับโจทย์
+   7) เปิดฉากเริ่มต้นด่านย่อยและทำการสุ่มสลับโจทย์
 ============================================================ */
 function startSelectedGame(gameKey) {
   state.gameType = gameKey;
@@ -552,13 +384,7 @@ function renderQuestion() {
   if (badge) badge.textContent = SUBGAMES_CONFIG[state.gameType].name;
 
   const turnIndicator = document.getElementById("turn-indicator");
-  if (turnIndicator) {
-    if (state.mode === "group") {
-      turnIndicator.textContent = `🎯 รอบคำถามของ: ${state.teams[state.currentTeamIdx].name}`;
-    } else {
-      turnIndicator.textContent = `🎯 ด่านประลองความสามารถเดี่ยว`;
-    }
-  }
+  if (turnIndicator) turnIndicator.textContent = `🎯 ด่านประลองความสามารถเดี่ยว`;
 
   const qTextEl = document.getElementById("question-text");
   if (qTextEl) qTextEl.innerHTML = currentQ.q;
@@ -715,7 +541,7 @@ function confirmAnswer() {
 }
 
 /* ============================================================
-   8.4) Guess The Word: แตะตัวอักษรจีนที่กระจัดกระจายมาเรียงเป็นคำเฉลย
+   7.4) Guess The Word: แตะตัวอักษรจีนที่กระจัดกระจายมาเรียงเป็นคำเฉลย
 ============================================================ */
 
 // วาดตัวอักษรจีน (ตัวจริง + ตัวลวง) เป็นปุ่มให้แตะ พร้อมปุ่มลบตัวล่าสุด
@@ -836,9 +662,6 @@ document.getElementById("next-btn")?.addEventListener("click", () => {
   }
 
   state.currentQIdx++;
-  if (state.mode === "group") {
-    state.currentTeamIdx = (state.currentTeamIdx + 1) % state.teams.length;
-  }
 
   if (state.currentQIdx < state.questions.length) {
     renderQuestion();
@@ -848,7 +671,7 @@ document.getElementById("next-btn")?.addEventListener("click", () => {
 });
 
 /* ============================================================
-   8.5) Memory Match: พลิกการ์ดจับคู่อักษรจีน (zh) กับคำแปลไทย (th)
+   7.5) Memory Match: พลิกการ์ดจับคู่อักษรจีน (zh) กับคำแปลไทย (th)
 ============================================================ */
 const MEMORY_PAIR_COUNT_DEFAULT = 6;
 
@@ -941,12 +764,7 @@ function updateMemoryProgress() {
     progressBarFill.style.width = `${(memoryState.matchedPairs / memoryState.totalPairs) * 100}%`;
 
   const turnIndicator = document.getElementById("memory-turn-indicator");
-  if (turnIndicator) {
-    turnIndicator.textContent =
-      state.mode === "group"
-        ? `🎯 รอบของ: ${state.teams[state.currentTeamIdx].name}`
-        : `🎯 ด่านประลองความสามารถเดี่ยว`;
-  }
+  if (turnIndicator) turnIndicator.textContent = `🎯 ด่านประลองความสามารถเดี่ยว`;
 
   const scoreRow = document.getElementById("memory-score-row");
   if (scoreRow) {
@@ -1019,10 +837,6 @@ function handleMemoryCardClick(idx) {
         memoryState.flipped = [];
         memoryState.lock = false;
 
-        if (state.mode === "group") {
-          state.currentTeamIdx = (state.currentTeamIdx + 1) % state.teams.length;
-        }
-
         renderMemoryBoard();
       }, 900);
     }
@@ -1041,7 +855,7 @@ document.getElementById("memory-grid")?.addEventListener("click", (e) => {
 });
 
 /* ============================================================
-   9) ลีดเดอร์บอร์ดสรุปตารางอันดับ
+   8) ลีดเดอร์บอร์ดสรุปตารางอันดับ
 ============================================================ */
 function showLeaderboard() {
   const list = document.getElementById("leaderboard-list");
@@ -1099,6 +913,51 @@ document
 document.getElementById("play-again-btn")?.addEventListener("click", () => {
   showScreen("hsk");
 });
+
+/* ============================================================
+   9) เสียงพูดภาษาจีน (Text-to-Speech)
+============================================================ */
+// แคชรายชื่อเสียงพูดไว้ล่วงหน้า เพราะบางเบราว์เซอร์โหลดรายการเสียงแบบ async
+let cachedVoices = [];
+function refreshVoiceList() {
+  cachedVoices = window.speechSynthesis.getVoices();
+}
+if (typeof window.speechSynthesis !== "undefined") {
+  refreshVoiceList();
+  window.speechSynthesis.onvoiceschanged = refreshVoiceList;
+}
+
+// เลือกเสียงเจ้าของภาษาจีนที่ดีที่สุดเท่าที่เครื่องผู้ใช้มี (ไม่เอาเสียงแปลภาษาทั่วไป)
+function getNativeChineseVoice() {
+  const voices = cachedVoices.length
+    ? cachedVoices
+    : window.speechSynthesis.getVoices();
+  const zhVoices = voices.filter((v) => v.lang?.toLowerCase().startsWith("zh"));
+  if (zhVoices.length === 0) return null;
+
+  return (
+    zhVoices.find((v) => v.lang.toLowerCase() === "zh-cn" && v.localService) ||
+    zhVoices.find((v) => v.lang.toLowerCase() === "zh-cn") ||
+    zhVoices.find((v) => v.localService) ||
+    zhVoices[0]
+  );
+}
+
+// ฟังก์ชันกลางสำหรับอ่านออกเสียงคำจีนด้วยเสียงเจ้าของภาษา ใช้ร่วมกันได้ทุกหน้าที่มีคำศัพท์จีน
+function speakChinese(text, rate = 0.8) {
+  if (!text || typeof window.speechSynthesis === "undefined") return;
+  window.speechSynthesis.cancel();
+  const speech = new SpeechSynthesisUtterance(text);
+  const nativeVoice = getNativeChineseVoice();
+  if (nativeVoice) {
+    speech.voice = nativeVoice;
+    speech.lang = nativeVoice.lang;
+  } else {
+    speech.lang = "zh-CN";
+  }
+  speech.rate = rate;
+  window.speechSynthesis.speak(speech);
+}
 
 /* ============================================================
    10) หน้าดูประวัติคลังคำศัพท์รวมและจำลองการรับฟังเสียงพูด
@@ -1163,48 +1022,6 @@ function updateListenWord() {
   }
   if (!words[listenIndex]) listenIndex = 0;
   targetEl.textContent = words[listenIndex].zh;
-}
-
-// แคชรายชื่อเสียงพูดไว้ล่วงหน้า เพราะบางเบราว์เซอร์โหลดรายการเสียงแบบ async
-let cachedVoices = [];
-function refreshVoiceList() {
-  cachedVoices = window.speechSynthesis.getVoices();
-}
-if (typeof window.speechSynthesis !== "undefined") {
-  refreshVoiceList();
-  window.speechSynthesis.onvoiceschanged = refreshVoiceList;
-}
-
-// เลือกเสียงเจ้าของภาษาจีนที่ดีที่สุดเท่าที่เครื่องผู้ใช้มี (ไม่เอาเสียงแปลภาษาทั่วไป)
-function getNativeChineseVoice() {
-  const voices = cachedVoices.length
-    ? cachedVoices
-    : window.speechSynthesis.getVoices();
-  const zhVoices = voices.filter((v) => v.lang?.toLowerCase().startsWith("zh"));
-  if (zhVoices.length === 0) return null;
-
-  return (
-    zhVoices.find((v) => v.lang.toLowerCase() === "zh-cn" && v.localService) ||
-    zhVoices.find((v) => v.lang.toLowerCase() === "zh-cn") ||
-    zhVoices.find((v) => v.localService) ||
-    zhVoices[0]
-  );
-}
-
-// ฟังก์ชันกลางสำหรับอ่านออกเสียงคำจีนด้วยเสียงเจ้าของภาษา ใช้ร่วมกันได้ทุกหน้าที่มีคำศัพท์จีน
-function speakChinese(text, rate = 0.8) {
-  if (!text || typeof window.speechSynthesis === "undefined") return;
-  window.speechSynthesis.cancel();
-  const speech = new SpeechSynthesisUtterance(text);
-  const nativeVoice = getNativeChineseVoice();
-  if (nativeVoice) {
-    speech.voice = nativeVoice;
-    speech.lang = nativeVoice.lang;
-  } else {
-    speech.lang = "zh-CN";
-  }
-  speech.rate = rate;
-  window.speechSynthesis.speak(speech);
 }
 
 function playAudio() {
@@ -1369,6 +1186,9 @@ function renderScoreResult(data) {
 
 document.getElementById("record-btn")?.addEventListener("click", toggleRecording);
 
+document.getElementById("start-play-btn")?.addEventListener("click", () => {
+  showScreen("hsk");
+});
+
 // รันแอปพลิเคชันระบบเริ่มต้นตอนเปิดหน้าแรก
-initGroupSetup();
-showScreen("hsk");
+showScreen("start");

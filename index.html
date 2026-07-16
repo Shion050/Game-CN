@@ -39,17 +39,42 @@
     <div class="frame-corner corner-br" aria-hidden="true">
       <svg viewBox="0 0 60 60"><use href="#corner-fret" /></svg>
     </div>
+    <div class="ambient-glyphs" aria-hidden="true">
+      <span>福</span>
+      <span>喜</span>
+      <span>財</span>
+      <span>寿</span>
+      <span>福</span>
+      <span>喜</span>
+    </div>
     <div class="app" id="app">
 
-      <section class="screen active" id="screen-hsk" aria-label="เลือกระดับ HSK">
+      <section class="screen active" id="screen-start" aria-label="หน้าเริ่มต้น">
         <header class="brand">
-          <div class="lantern lantern-left" aria-hidden="true">
-            <span class="cap"></span><span class="string"></span
-            ><span class="lantern-body"></span><span class="tassel"></span>
+          <div class="dragon-deco dragon-left" aria-hidden="true">
+            <img src="dragon.webp" alt="" />
           </div>
-          <div class="lantern lantern-right" aria-hidden="true">
-            <span class="cap"></span><span class="string"></span
-            ><span class="lantern-body"></span><span class="tassel"></span>
+          <div class="dragon-deco dragon-right" aria-hidden="true">
+            <img src="dragon.webp" alt="" />
+          </div>
+          <div class="watermark hanzi" aria-hidden="true">汉</div>
+          <p class="eyebrow">汉语 · CHINESE LEVEL UP</p>
+          <h1>เกมเรียน<span class="accent">ภาษาจีน</span><br />รูปแบบใหม่</h1>
+          <svg class="brush" viewBox="0 0 140 18" aria-hidden="true">
+            <path d="M5 9 C 30 2, 60 16, 70 9 S 110 2, 135 9" />
+          </svg>
+          <p class="subtitle">ฝึกคำศัพท์ HSK 1-5 ผ่านเกมสนุกหลากหลายรูปแบบ</p>
+        </header>
+        <button type="button" class="btn btn-primary btn-block start-play-btn" id="start-play-btn">▶ กดเล่น</button>
+      </section>
+
+      <section class="screen" id="screen-hsk" aria-label="เลือกระดับ HSK">
+        <header class="brand">
+          <div class="dragon-deco dragon-left" aria-hidden="true">
+            <img src="dragon.webp" alt="" />
+          </div>
+          <div class="dragon-deco dragon-right" aria-hidden="true">
+            <img src="dragon.webp" alt="" />
           </div>
           <div class="watermark hanzi" aria-hidden="true">汉</div>
           <p class="eyebrow">汉语 · CHINESE LEVEL UP</p>
@@ -57,9 +82,8 @@
           <svg class="brush" viewBox="0 0 140 18" aria-hidden="true">
             <path d="M5 9 C 30 2, 60 16, 70 9 S 110 2, 135 9" />
           </svg>
-          <p class="subtitle">เลือกเลเวลคำศัพท์ระบบพู่กันจีนเพื่อเริ่มต้นความสนุก</p>
+          <p class="subtitle">เลือกระดับคำศัพท์แล้วเริ่มเล่นได้ทันที</p>
         </header>
-
         <main class="card-grid" id="hsk-grid">
           <button class="level-card" type="button" data-hsk="hsk1">
             <span class="seal-stamp hanzi">一</span>
@@ -89,75 +113,9 @@
         </main>
       </section>
 
-      <section class="screen" id="screen-mode" aria-label="เลือกโหมดเกม">
-        <nav class="back-row">
-          <button class="back-btn" type="button" data-back="screen-hsk">← </button>
-          <h2>เลือกโหมดผู้เล่น</h2>
-        </nav>
-        <p class="subtitle" id="mode-context">ต้องการตะลุยคนเดียวหรือแข่งขันแบบจับกลุ่ม</p>
-        <main class="card-grid" id="mode-grid">
-          <button class="level-card" type="button" data-mode="solo">
-            <span class="seal-stamp">👤</span>
-            <span class="info"><span class="title">Solo Mode</span><span class="desc">ฝึกฝนทบทวนเก็บคะแนนคนเดียวเงียบๆ</span></span>
-            <span class="arrow">▶</span>
-          </button>
-          <button class="level-card" type="button" data-mode="group">
-            <span class="seal-stamp">👥</span>
-            <span class="info"><span class="title">Group Random Team</span><span class="desc">ปาร์ตี้เกมสุ่มจับทีมแข่งกันตอบ</span></span>
-            <span class="arrow">▶</span>
-          </button>
-        </main>
-      </section>
-
-      <section class="screen" id="screen-group-setup" aria-label="ตั้งค่ากลุ่มผู้เล่น">
-        <nav class="back-row">
-          <button class="back-btn" type="button" data-back="screen-mode">←</button>
-          <h2>ตั้งชื่อและจัดทีมผู้เล่น</h2>
-        </nav>
-        <form class="setup-card" id="group-setup-form">
-          <div class="form-group">
-            <label for="player-count">👥 จำนวนผู้เข้าร่วมทั้งหมด</label>
-            <div class="input-row">
-              <div class="stepper">
-                <button type="button" class="stepper-btn" id="player-count-minus" aria-label="ลดจำนวนผู้เล่น">−</button>
-                <input type="number" id="player-count" class="number-input" min="2" max="20" value="4" />
-                <button type="button" class="stepper-btn" id="player-count-plus" aria-label="เพิ่มจำนวนผู้เล่น">+</button>
-              </div>
-              <button type="button" class="btn btn-ghost" id="apply-player-count">อัปเดตช่องชื่อ</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>📝 รายชื่อสมาชิก</label>
-            <div class="player-list" id="player-name-list"></div>
-            <button type="button" class="btn btn-ghost btn-add" id="add-player-btn">+ เพิ่มแถวรายชื่อ</button>
-          </div>
-          <div class="form-group">
-            <label>🎯 จัดสรรออกเป็น</label>
-            <div class="team-count-picker" id="team-count-picker">
-              <button type="button" class="team-count-chip active" data-count="2">2 <span>ทีม</span></button>
-              <button type="button" class="team-count-chip" data-count="3">3 <span>ทีม</span></button>
-              <button type="button" class="team-count-chip" data-count="4">4 <span>ทีม</span></button>
-            </div>
-            <input type="hidden" id="team-count" value="2" />
-          </div>
-          <p class="form-note" id="group-setup-error" role="alert"></p>
-          <button type="submit" class="btn btn-primary btn-block" id="randomize-btn">🎲 สุ่มจับสลากแบ่งทีม</button>
-        </form>
-      </section>
-
-      <section class="screen" id="screen-team-result" aria-label="ผลการสุ่มทีม">
-        <nav class="back-row">
-          <button class="back-btn" type="button" data-back="screen-group-setup">← แก้ไขชื่อ</button>
-          <h2>ผลการสุ่มจับคู่ทีม</h2>
-        </nav>
-        <p class="subtitle">ระบบคัดเลือกทีมสมดุลเรียบร้อยแล้ว ตรวจสอบรายชื่อด้านล่าง</p>
-        <main class="team-grid" id="team-result-grid"></main>
-        <button type="button" class="btn btn-primary btn-block" id="confirm-teams-btn">ดำเนินการเลือกเกมย่อย ▶</button>
-      </section>
-
       <section class="screen" id="screen-subgame" aria-label="เลือกเกมย่อย">
         <nav class="back-row">
-          <button class="back-btn" type="button" id="subgame-back-btn" data-back="screen-mode">← </button>
+          <button class="back-btn" type="button" data-back="screen-hsk">← </button>
           <h2 id="subgame-heading">เลือกเกมย่อย</h2>
         </nav>
         <p class="subtitle" id="subgame-context">ระดับ: -</p>
@@ -166,31 +124,6 @@
           <button type="button" class="btn" onclick="openListenGame()"> ฝึกการฟังและออกเสียง</button>
         </div>
         <main class="card-grid" id="subgame-grid"></main>
-      </section>
-
-      <section class="screen" id="screen-memory-difficulty" aria-label="เลือกระดับความยาก Memory Match">
-        <nav class="back-row">
-          <button class="back-btn" type="button" data-back="screen-subgame">← </button>
-          <h2>เลือกระดับความยาก</h2>
-        </nav>
-        <p class="subtitle">ยิ่งจับคู่เยอะ ยิ่งท้าทายความจำมากขึ้น</p>
-        <main class="card-grid" id="memory-difficulty-grid">
-          <button class="level-card" type="button" data-pairs="6">
-            <span class="seal-stamp hanzi">易</span>
-            <span class="info"><span class="title">ง่าย</span><span class="desc">6 คู่ (12 การ์ด)</span></span>
-            <span class="arrow">▶</span>
-          </button>
-          <button class="level-card" type="button" data-pairs="10">
-            <span class="seal-stamp hanzi">中</span>
-            <span class="info"><span class="title">กลาง</span><span class="desc">10 คู่ (20 การ์ด)</span></span>
-            <span class="arrow">▶</span>
-          </button>
-          <button class="level-card" type="button" data-pairs="14">
-            <span class="seal-stamp hanzi">难</span>
-            <span class="info"><span class="title">ยาก</span><span class="desc">14 คู่ (28 การ์ด)</span></span>
-            <span class="arrow">▶</span>
-          </button>
-        </main>
       </section>
 
       <section class="screen" id="screen-vocabulary" aria-label="คลังคำศัพท์">
@@ -217,6 +150,31 @@
           </div>
         </main>
         <button type="button" class="back-btn" data-back="screen-subgame" style="display:block; margin:20px auto;">◀ </button>
+      </section>
+
+      <section class="screen" id="screen-memory-difficulty" aria-label="เลือกระดับความยาก Memory Match">
+        <nav class="back-row">
+          <button class="back-btn" type="button" data-back="screen-subgame">← </button>
+          <h2>เลือกระดับความยาก</h2>
+        </nav>
+        <p class="subtitle">ยิ่งจับคู่เยอะ ยิ่งท้าทายความจำมากขึ้น</p>
+        <main class="card-grid" id="memory-difficulty-grid">
+          <button class="level-card" type="button" data-pairs="6">
+            <span class="seal-stamp hanzi">易</span>
+            <span class="info"><span class="title">ง่าย</span><span class="desc">6 คู่ (12 การ์ด)</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-pairs="10">
+            <span class="seal-stamp hanzi">中</span>
+            <span class="info"><span class="title">กลาง</span><span class="desc">10 คู่ (20 การ์ด)</span></span>
+            <span class="arrow">▶</span>
+          </button>
+          <button class="level-card" type="button" data-pairs="14">
+            <span class="seal-stamp hanzi">难</span>
+            <span class="info"><span class="title">ยาก</span><span class="desc">14 คู่ (28 การ์ด)</span></span>
+            <span class="arrow">▶</span>
+          </button>
+        </main>
       </section>
 
       <section class="screen" id="screen-game" aria-label="เล่นเกม">
@@ -281,7 +239,7 @@
           <div class="score-big" id="result-score">0</div>
           <p class="score-sub">คะแนนสูงสุดในรอบนี้</p>
           <div class="result-stats" id="result-stats"></div>
-          <button type="button" class="btn btn-primary btn-block" id="play-again-btn">กลับไปหน้าแรก</button>
+          <button type="button" class="btn btn-primary btn-block" id="play-again-btn">🏠 กลับหน้าแรก</button>
         </main>
       </section>
 
